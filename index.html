@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CC 選物代購 - 訂單查詢</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #F5F3EF; font-family: 'PingFang TC','Noto Sans TC',sans-serif; min-height: 100vh; }
+.header { background: #1A1A2E; padding: 22px 28px; border-bottom: 3px solid #E8A87C; }
+.header-inner { max-width: 600px; margin: 0 auto; }
+.header-eyebrow { font-size: 10px; letter-spacing: 4px; color: #E8A87C; margin-bottom: 4px; }
+.header h1 { color: #fff; font-size: 22px; font-weight: 700; }
+.header p { color: #A0A0B8; font-size: 12px; margin-top: 4px; }
+.main { max-width: 600px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
+.card { background: #fff; border-radius: 12px; padding: 22px; border: 1px solid #E8E4DF; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.card-title { font-weight: 700; color: #1A1A2E; font-size: 15px; margin-bottom: 16px; }
+label { font-size: 12px; font-weight: 600; color: #6B6B80; margin-bottom: 5px; display: block; }
+select, input { width: 100%; border: 1.5px solid #DDD8D0; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: #1A1A2E; background: #FAFAF8; outline: none; font-family: inherit; }
+select:focus, input:focus { border-color: #E8A87C; }
+.btn { background: #1A1A2E; color: #E8A87C; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%; margin-top: 12px; }
+.status-badge { display: inline-block; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 600; }
+.order-item { display: flex; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #F0EDEA; }
+.order-item:last-of-type { border-bottom: none; }
+.thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #E0DCD8; flex-shrink: 0; }
+.no-thumb { width: 64px; height: 64px; background: #F0EDEA; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #CCC; flex-shrink: 0; }
+.summary { background: #FEF9F4; border-radius: 10px; padding: 14px 16px; border: 1px solid #E8A87C; margin-top: 4px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; color: #6B6B80; margin-bottom: 5px; }
+.summary-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; color: #1A1A2E; border-top: 1px solid #E8A87C; padding-top: 10px; margin-top: 6px; }
+.empty { text-align: center; color: #B0AAA4; font-size: 14px; padding: 32px 0; }
+.loading { text-align: center; color: #A0A0B8; font-size: 13px; padding: 24px 0; }
+.customer-header { background: #1A1A2E; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-inner">
+    <div class="header-eyebrow">CC 選物代購</div>
+    <h1>訂單查詢</h1>
+    <p>選擇你的暱稱，查看訂單狀態與金額</p>
+  </div>
+</div>
+
+<div class="main">
+  <div class="card">
+    <div class="card-title">查詢我的訂單</div>
+    <label>選擇你的暱稱</label>
+    <select id="name-select" onchange="showOrders()">
+      <option value="">載入中…</option>
+    </select>
+  </div>
+
+  <div id="result"></div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://zwabpiysvlqvqunauwyj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3YWJwaXlzdmxxdnF1bmF1d3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA1MzgsImV4cCI6MjA5NzY4NjUzOH0.-jx1ikazqqKRta-8lEoifeKR9bVVm_E00m4e17q_6z8';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const STATUS_LABEL = { pending:'處理中', success:'採購成功', outofstock:'斷貨', preparing:'出貨準備中', done:'已完成' };
+const STATUS_COLOR = { pending:'#A0A0B8', success:'#2E7D32', outofstock:'#D64045', preparing:'#E65100', done:'#1565C0' };
+const STATUS_BG = { pending:'#F0F0F8', success:'#E8F5E9', outofstock:'#FFEBEE', preparing:'#FFF3E0', done:'#E3F2FD' };
+
+let allOrders = [];
+let groups = {};
+
+async function loadOrders() {
+  const { data } = await sb.from('orders').select('*').order('created_at', { ascending: false });
+  allOrders = data || [];
+
+  // Group by nickname (case-insensitive)
+  const keyMap = {};
+  const displayMap = {};
+  allOrders.forEach(o => {
+    const key = o.nickname.toLowerCase();
+    if (!keyMap[key]) { keyMap[key] = []; displayMap[key] = o.nickname; }
+    keyMap[key].push(o);
+  });
+  groups = {};
+  Object.keys(keyMap).forEach(k => { groups[displayMap[k]] = keyMap[k]; });
+
+  // Populate select
+  const sel = document.getElementById('name-select');
+  const names = Object.keys(groups).sort();
+  sel.innerHTML = '<option value="">-- 選擇你的暱稱 --</option>' +
+    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+}
+
+function showOrders() {
+  const name = document.getElementById('name-select').value;
+  const container = document.getElementById('result');
+  if (!name) { container.innerHTML = ''; return; }
+
+  const items = groups[name] || [];
+  // Get picking data from DB values
+  const shipping = items[0]?.shipping || 0;
+  const extra = items[0]?.extra || 0;
+  const discount = items[0]?.discount || 0;
+  const note = items[0]?.note || '';
+
+  const itemsTwd = items.reduce((s, o) => {
+    if (o.status === 'outofstock') return s;
+    const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+    return s + twd * (parseInt(o.quantity)||1);
+  }, 0);
+  const total = itemsTwd + Number(shipping) + Number(extra) - Number(discount);
+
+  container.innerHTML = `
+    <div class="customer-header">
+      <div>
+        <div style="color:#fff;font-weight:700;font-size:17px">${esc(name)}</div>
+        <div style="color:#A0A0B8;font-size:12px;margin-top:2px">共 ${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件商品</div>
+      </div>
+      ${total > 0 ? `<div style="color:#E8A87C;font-weight:700;font-size:16px">NT$${Math.round(total).toLocaleString()}</div>` : ''}
+    </div>
+
+    <div class="card" style="padding:16px">
+      ${items.map(o => {
+        const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+        const twdTotal = o.status === 'outofstock' ? 0 : twd * (parseInt(o.quantity)||1);
+        return `<div class="order-item">
+          ${o.image_url ? `<img src="${esc(o.image_url)}" class="thumb">` : '<div class="no-thumb">無圖</div>'}
+          <div style="flex:1">
+            <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:4px">
+              ${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}
+            </div>
+            <div style="font-size:12px;color:#6B6B80">
+              ${o.size?esc(o.size)+'　':''}數量：${o.quantity||1}
+            </div>
+            <span class="status-badge" style="background:${STATUS_BG[o.status]||'#F0F0F8'};color:${STATUS_COLOR[o.status]||'#A0A0B8'};margin-top:4px">
+              ${STATUS_LABEL[o.status]||'處理中'}
+            </span>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            ${o.status==='outofstock'
+              ? '<div style="color:#D64045;font-size:13px;font-weight:600">不計費</div>'
+              : twdTotal > 0 ? `<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>` : ''
+            }
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    ${total > 0 ? `<div class="summary">
+      ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
+      ${Number(shipping)>0?`<div class="summary-row"><span>運費</span><span>NT$${Number(shipping).toLocaleString()}</span></div>`:''}
+      ${Number(extra)>0?`<div class="summary-row"><span>其他加價</span><span>NT$${Number(extra).toLocaleString()}</span></div>`:''}
+      ${Number(discount)>0?`<div class="summary-row"><span style="color:#2E7D32">優惠折扣</span><span style="color:#2E7D32">-NT$${Number(discount).toLocaleString()}</span></div>`:''}
+      ${note?`<div class="summary-row"><span>備註</span><span>${esc(note)}</span></div>`:''}
+      <div class="summary-total"><span>應付總金額</span><span style="color:#E8A87C">NT$${Math.round(total).toLocaleString()}</span></div>
+    </div>` : `<div class="summary"><div style="font-size:13px;color:#A0A0B8;text-align:center">金額由工作人員確認後顯示</div></div>`}
+  `;
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+loadOrders();
+</script>
+</body>
+</html>
