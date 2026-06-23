@@ -38,7 +38,7 @@ select:focus, input:focus { border-color: #E8A87C; }
   <div class="header-inner">
     <div class="header-eyebrow">CC 選物代購</div>
     <h1>訂單查詢</h1>
-    <p>選擇你的暱稱，查看訂單狀態與金額</p>
+    <p id="trip-subtitle">載入中…</p>
   </div>
 </div>
 
@@ -97,7 +97,11 @@ async function loadOrders() {
   // Populate select
   const sel = document.getElementById('name-select');
   const names = Object.keys(groups).sort();
-  sel.innerHTML = `<option value="">-- 選擇你的暱稱 (${latestTrip}) --</option>` +
+  // Update subtitle
+  const subtitle = document.getElementById('trip-subtitle');
+  if (subtitle) subtitle.textContent = `目前團次：${latestTrip}`;
+
+  sel.innerHTML = `<option value="">-- 選擇你的暱稱 --</option>` +
     names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
 }
 
