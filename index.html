@@ -38,7 +38,7 @@ select:focus, input:focus { border-color: #E8A87C; }
   <div class="header-inner">
     <div class="header-eyebrow">CC 選物代購</div>
     <h1>訂單查詢</h1>
-    <p id="trip-subtitle">載入中…</p>
+    <p>選擇你的暱稱，查看每團訂單內容</p>
   </div>
 </div>
 
@@ -111,63 +111,89 @@ function showOrders() {
   if (!name) { container.innerHTML = ''; return; }
 
   const items = groups[name] || [];
-  // Get picking data from DB values
-  const shipping = items[0]?.shipping || 0;
-  const extra = items[0]?.extra || 0;
-  const discount = items[0]?.discount || 0;
-  const note = items[0]?.note || '';
 
-  const itemsTwd = items.reduce((s, o) => {
-    if (o.status === 'outofstock') return s;
-    const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
-    return s + twd * (parseInt(o.quantity)||1);
+  // Group by trip
+  const tripMap = {};
+  items.forEach(o => {
+    const trip = o.trip || 'CC選物代購';
+    if (!tripMap[trip]) tripMap[trip] = [];
+    tripMap[trip].push(o);
+  });
+
+  const tripNames = Object.keys(tripMap);
+  const grandTotal = tripNames.reduce((s, trip) => {
+    const tripItems = tripMap[trip];
+    const twd = tripItems.reduce((ts, o) => {
+      if (o.status === 'outofstock') return ts;
+      const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+      return ts + price * (parseInt(o.quantity)||1);
+    }, 0);
+    const shipping = tripItems[0]?.shipping || 0;
+    const extra = tripItems[0]?.extra || 0;
+    const discount = tripItems[0]?.discount || 0;
+    return s + twd + Number(shipping) + Number(extra) - Number(discount);
   }, 0);
-  const total = itemsTwd + Number(shipping) + Number(extra) - Number(discount);
 
   container.innerHTML = `
     <div class="customer-header">
       <div>
         <div style="color:#fff;font-weight:700;font-size:17px">${esc(name)}</div>
-        <div style="color:#A0A0B8;font-size:12px;margin-top:2px">共 ${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件商品</div>
+        <div style="color:#A0A0B8;font-size:12px;margin-top:2px">共 ${tripNames.length} 個團次・${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件商品</div>
       </div>
-      ${total > 0 ? `<div style="color:#E8A87C;font-weight:700;font-size:16px">NT$${Math.round(total).toLocaleString()}</div>` : ''}
+      ${grandTotal > 0 ? `<div style="color:#E8A87C;font-weight:700;font-size:16px">NT$${Math.round(grandTotal).toLocaleString()}</div>` : ''}
     </div>
 
-    <div class="card" style="padding:16px">
-      ${items.map(o => {
-        const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
-        const twdTotal = o.status === 'outofstock' ? 0 : twd * (parseInt(o.quantity)||1);
-        return `<div class="order-item">
-          ${o.image_url ? `<img src="${esc(o.image_url)}" class="thumb">` : '<div class="no-thumb">無圖</div>'}
-          <div style="flex:1">
-            <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:4px">
-              ${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}
-            </div>
-            <div style="font-size:12px;color:#6B6B80">
-              ${o.size?esc(o.size)+'　':''}數量：${o.quantity||1}
-            </div>
-            <span class="status-badge" style="background:${STATUS_BG[o.status]||'#F0F0F8'};color:${STATUS_COLOR[o.status]||'#A0A0B8'};margin-top:4px">
-              ${STATUS_LABEL[o.status]||'處理中'}
-            </span>
-          </div>
-          <div style="text-align:right;flex-shrink:0">
-            ${o.status==='outofstock'
-              ? '<div style="color:#D64045;font-size:13px;font-weight:600">不計費</div>'
-              : twdTotal > 0 ? `<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>` : ''
-            }
-          </div>
+    ${tripNames.map(trip => {
+      const tripItems = tripMap[trip];
+      const shipping = Number(tripItems[0]?.shipping||0);
+      const extra = Number(tripItems[0]?.extra||0);
+      const discount = Number(tripItems[0]?.discount||0);
+      const note = tripItems[0]?.note||'';
+      const itemsTwd = tripItems.reduce((s, o) => {
+        if (o.status === 'outofstock') return s;
+        const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+        return s + price * (parseInt(o.quantity)||1);
+      }, 0);
+      const total = itemsTwd + shipping + extra - discount;
+
+      return `
+        <div style="background:#1A1A2E;border-radius:10px 10px 0 0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <span style="color:#E8A87C;font-weight:700;font-size:14px">🏷 ${esc(trip)}</span>
+          <span style="color:#fff;font-size:12px">${tripItems.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</span>
+        </div>
+        <div class="card" style="padding:16px;border-radius:0 0 12px 12px;margin-top:0;border-top:none">
+          ${tripItems.map(o => {
+            const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+            const twdTotal = o.status === 'outofstock' ? 0 : twd * (parseInt(o.quantity)||1);
+            return `<div class="order-item">
+              ${o.image_url ? `<img src="${esc(o.image_url)}" class="thumb">` : '<div class="no-thumb">無圖</div>'}
+              <div style="flex:1">
+                <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:4px">
+                  ${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}
+                </div>
+                <div style="font-size:12px;color:#6B6B80">${o.size?esc(o.size)+'　':''}數量：${o.quantity||1}</div>
+                <span class="status-badge" style="background:${STATUS_BG[o.status]||'#F0F0F8'};color:${STATUS_COLOR[o.status]||'#A0A0B8'};margin-top:4px">
+                  ${STATUS_LABEL[o.status]||'處理中'}
+                </span>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                ${o.status==='outofstock'
+                  ? '<div style="color:#D64045;font-size:13px;font-weight:600">不計費</div>'
+                  : twdTotal > 0 ? `<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>` : ''
+                }
+              </div>
+            </div>`;
+          }).join('')}
+          ${total > 0 ? `<div style="background:#FEF9F4;border-radius:8px;padding:12px;margin-top:10px;border:1px solid #E8A87C">
+            ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
+            ${shipping>0?`<div class="summary-row"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
+            ${extra>0?`<div class="summary-row"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
+            ${discount>0?`<div class="summary-row"><span style="color:#2E7D32">優惠折扣</span><span style="color:#2E7D32">-NT$${discount.toLocaleString()}</span></div>`:''}
+            ${note?`<div class="summary-row"><span>備註</span><span>${esc(note)}</span></div>`:''}
+            <div class="summary-total"><span>本團應付</span><span style="color:#E8A87C">NT$${Math.round(total).toLocaleString()}</span></div>
+          </div>` : `<div style="font-size:13px;color:#A0A0B8;text-align:center;margin-top:10px">金額由工作人員確認後顯示</div>`}
         </div>`;
-      }).join('')}
-    </div>
-
-    ${total > 0 ? `<div class="summary">
-      ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
-      ${Number(shipping)>0?`<div class="summary-row"><span>運費</span><span>NT$${Number(shipping).toLocaleString()}</span></div>`:''}
-      ${Number(extra)>0?`<div class="summary-row"><span>其他加價</span><span>NT$${Number(extra).toLocaleString()}</span></div>`:''}
-      ${Number(discount)>0?`<div class="summary-row"><span style="color:#2E7D32">優惠折扣</span><span style="color:#2E7D32">-NT$${Number(discount).toLocaleString()}</span></div>`:''}
-      ${note?`<div class="summary-row"><span>備註</span><span>${esc(note)}</span></div>`:''}
-      <div class="summary-total"><span>應付總金額</span><span style="color:#E8A87C">NT$${Math.round(total).toLocaleString()}</span></div>
-    </div>` : `<div class="summary"><div style="font-size:13px;color:#A0A0B8;text-align:center">金額由工作人員確認後顯示</div></div>`}
+    }).join('')}
   `;
 }
 
