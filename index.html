@@ -80,13 +80,10 @@ async function loadOrders() {
   });
   const latestTrip = trips[0] || '第1團';
 
-  // Filter to latest trip only
-  const currentOrders = allOrders.filter(o => (o.trip || '第1團') === latestTrip);
-
-  // Group by nickname (case-insensitive)
+  // Group by nickname (case-insensitive) - show ALL orders regardless of trip
   const keyMap = {};
   const displayMap = {};
-  currentOrders.forEach(o => {
+  allOrders.forEach(o => {
     const key = o.nickname.toLowerCase();
     if (!keyMap[key]) { keyMap[key] = []; displayMap[key] = o.nickname; }
     keyMap[key].push(o);
