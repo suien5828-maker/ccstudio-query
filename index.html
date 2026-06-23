@@ -70,10 +70,23 @@ async function loadOrders() {
   const { data } = await sb.from('orders').select('*').order('created_at', { ascending: false });
   allOrders = data || [];
 
+  // Find latest trip
+  const trips = [...new Set(allOrders.map(o => o.trip || '第1團'))];
+  // Sort trips to find latest (by number)
+  trips.sort((a, b) => {
+    const na = parseInt(a.replace(/[^0-9]/g,'')) || 0;
+    const nb = parseInt(b.replace(/[^0-9]/g,'')) || 0;
+    return nb - na;
+  });
+  const latestTrip = trips[0] || '第1團';
+
+  // Filter to latest trip only
+  const currentOrders = allOrders.filter(o => (o.trip || '第1團') === latestTrip);
+
   // Group by nickname (case-insensitive)
   const keyMap = {};
   const displayMap = {};
-  allOrders.forEach(o => {
+  currentOrders.forEach(o => {
     const key = o.nickname.toLowerCase();
     if (!keyMap[key]) { keyMap[key] = []; displayMap[key] = o.nickname; }
     keyMap[key].push(o);
@@ -84,7 +97,7 @@ async function loadOrders() {
   // Populate select
   const sel = document.getElementById('name-select');
   const names = Object.keys(groups).sort();
-  sel.innerHTML = '<option value="">-- 選擇你的暱稱 --</option>' +
+  sel.innerHTML = `<option value="">-- 選擇你的暱稱 (${latestTrip}) --</option>` +
     names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
 }
 
