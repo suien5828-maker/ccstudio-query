@@ -3,273 +3,55 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CC 選物代購 - 訂單管理</title>
+<title>CC 選物代購 - 訂單查詢</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #F5F3EF; font-family: 'PingFang TC','Noto Sans TC',sans-serif; min-height: 100vh; }
 .header { background: #1A1A2E; padding: 22px 28px; border-bottom: 3px solid #E8A87C; }
-.header-inner { max-width: 900px; margin: 0 auto; }
+.header-inner { max-width: 600px; margin: 0 auto; }
 .header-eyebrow { font-size: 10px; letter-spacing: 4px; color: #E8A87C; margin-bottom: 4px; }
 .header h1 { color: #fff; font-size: 22px; font-weight: 700; }
 .header p { color: #A0A0B8; font-size: 12px; margin-top: 4px; }
-.tabs { background: #1A1A2E; border-bottom: 1px solid #2E2E45; }
-.tabs-inner { max-width: 900px; margin: 0 auto; display: flex; }
-.tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; padding: 12px 18px; font-size: 13px; font-weight: 600; color: #A0A0B8; font-family: inherit; }
-.tab-btn.active { color: #E8A87C; border-bottom-color: #E8A87C; }
-.main { max-width: 900px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 20px; }
-.card { background: #fff; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #E8E4DF; }
+.main { max-width: 600px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 16px; }
+.card { background: #fff; border-radius: 12px; padding: 22px; border: 1px solid #E8E4DF; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
 .card-title { font-weight: 700; color: #1A1A2E; font-size: 15px; margin-bottom: 16px; }
-.upload-zone { width: 90px; height: 90px; border: 2px dashed #C8C4BE; border-radius: 10px; cursor: pointer; background: #FAFAF8; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; transition: all 0.2s; }
-.upload-zone:hover { border-color: #E8A87C; }
-.upload-hint { font-size: 12px; color: #A0A0B8; padding-top: 6px; }
-.remove-btn { color: #D64045; cursor: pointer; font-size: 12px; margin-top: 4px; display: inline-block; background: none; border: none; font-family: inherit; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-.form-group { display: flex; flex-direction: column; }
-.form-group.full { grid-column: 1 / -1; }
-label { font-size: 12px; font-weight: 600; color: #6B6B80; letter-spacing: 0.5px; margin-bottom: 5px; }
-input[type=text], input[type=number] { width: 100%; border: 1.5px solid #DDD8D0; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: #1A1A2E; background: #FAFAF8; outline: none; font-family: inherit; }
-input:focus { border-color: #E8A87C; }
-.error { color: #D64045; font-size: 13px; margin-bottom: 10px; }
-.success { color: #2E7D32; font-size: 13px; margin-bottom: 10px; }
-.btn-primary { background: #1A1A2E; color: #E8A87C; border: none; border-radius: 8px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-secondary { background: #1A1A2E; color: #E8A87C; border: none; border-radius: 7px; padding: 8px 18px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.badge { background: #E8A87C; color: #1A1A2E; border-radius: 20px; padding: 2px 10px; font-size: 12px; font-weight: 700; margin-left: 10px; }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-thead tr { background: #F5F3EF; }
-th { padding: 9px 12px; text-align: left; color: #6B6B80; font-weight: 600; font-size: 11px; letter-spacing: 0.5px; border-bottom: 2px solid #E8E4DF; white-space: nowrap; }
-td { padding: 8px 12px; border-bottom: 1px solid #F0EDEA; vertical-align: middle; }
-tr:nth-child(even) td { background: #FAFAF8; }
-.thumb { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; border: 1px solid #E0DCD8; display: block; }
-.no-img { width: 52px; height: 52px; background: #F0EDEA; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #CCC; }
-.del-btn { background: transparent; border: none; color: #C0A0A0; cursor: pointer; font-size: 18px; }
-.table-note { margin-top: 10px; font-size: 11px; color: #B0A8A0; }
-/* 揀貨單 */
-.picking-cards { display: flex; flex-direction: column; gap: 14px; }
-.picking-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #E8E4DF; }
-.picking-card-header { background: #1A1A2E; padding: 12px 18px; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: #E8A87C; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #1A1A2E; flex-shrink: 0; }
-.picking-item { padding: 14px 18px; border-bottom: 1px solid #F0EDEA; }
-.picking-item:last-of-type { border-bottom: none; }
-.picking-item-top { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-.item-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #E0DCD8; flex-shrink: 0; }
-.item-no-img { width: 64px; height: 64px; background: #F0EDEA; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #CCC; flex-shrink: 0; }
-.picking-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-.field-box { display: flex; flex-direction: column; }
-.field-lbl { font-size: 10px; color: #6B6B80; margin-bottom: 3px; font-weight: 600; }
-.field-inp { border: 1.5px solid #DDD8D0; border-radius: 6px; padding: 7px 10px; font-size: 13px; color: #1A1A2E; background: #FAFAF8; outline: none; font-family: inherit; width: 100%; }
-.field-inp:focus { border-color: #E8A87C; }
-.field-calc { border: 1.5px solid #E8A87C; border-radius: 6px; padding: 7px 10px; font-size: 13px; font-weight: 700; color: #1A1A2E; background: #FEF9F4; width: 100%; }
-.picking-footer { padding: 14px 18px; background: #F9F7F5; border-top: 2px solid #E8E4DF; }
-.picking-footer-grid { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-.picking-total-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E8E4DF; padding-top: 12px; }
-/* 出貨單 */
-.shipping-cards { display: flex; flex-direction: column; gap: 20px; }
-.shipping-card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #E8E4DF; }
-.shipping-card-header { background: #1A1A2E; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
-.shipping-name { color: #fff; font-weight: 700; font-size: 17px; }
-.shipping-item { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid #F0EDEA; }
-.shipping-item:last-of-type { border-bottom: none; }
-.shipping-item:nth-child(even) { background: #FAFAF8; }
-.shipping-img { width: 72px; height: 72px; object-fit: cover; border-radius: 8px; border: 1px solid #E0DCD8; flex-shrink: 0; }
-.shipping-no-img { width: 72px; height: 72px; background: #F0EDEA; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #CCC; flex-shrink: 0; }
-.shipping-info { flex: 1; }
-.shipping-item-name { font-weight: 700; color: #1A1A2E; font-size: 15px; margin-bottom: 6px; }
-.shipping-meta { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #6B6B80; }
-.shipping-meta b { color: #2C2C3E; }
-.shipping-qty { background: #1A1A2E; color: #E8A87C; border-radius: 8px; padding: 8px 16px; text-align: center; flex-shrink: 0; }
-.shipping-footer { background: #FEF9F4; border-top: 2px solid #E8A87C; padding: 14px 20px; }
-.shipping-footer-row { display: flex; justify-content: space-between; font-size: 13px; color: #6B6B80; margin-bottom: 5px; }
-.shipping-footer-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; color: #1A1A2E; border-top: 1px solid #E8A87C; padding-top: 10px; margin-top: 8px; }
-.empty { text-align: center; color: #B0AAA4; font-size: 14px; padding: 48px 0; }
-.loading { text-align: center; color: #A0A0B8; font-size: 13px; padding: 32px 0; }
-.order-no-tag { font-size: 11px; color: #A0A0B8; background: #F5F3EF; border-radius: 4px; padding: 2px 6px; }
-.print-header { display: none; }
-@media print {
-  body { background: white; }
-  .header, .tabs, .card, .btn-primary, .btn-secondary, .del-btn, #orders-tab, #picking-tab { display: none !important; }
-  #shipping-tab { display: block !important; }
-  .shipping-top { display: none !important; }
-  .main { padding: 0; }
-  .print-header { display: block; text-align: center; padding: 16px 0 20px; border-bottom: 3px solid #E8A87C; margin-bottom: 20px; }
-  .print-header h2 { font-size: 22px; font-weight: 700; color: #1A1A2E; margin-bottom: 4px; }
-  .shipping-card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; margin-bottom: 16px; }
-  .shipping-card-header { background: #1A1A2E !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .shipping-footer { background: #FEF9F4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  input[type=checkbox] { display: none !important; }
-}
+label { font-size: 12px; font-weight: 600; color: #6B6B80; margin-bottom: 5px; display: block; }
+select, input { width: 100%; border: 1.5px solid #DDD8D0; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: #1A1A2E; background: #FAFAF8; outline: none; font-family: inherit; }
+select:focus, input:focus { border-color: #E8A87C; }
+.btn { background: #1A1A2E; color: #E8A87C; border: none; border-radius: 8px; padding: 12px; font-size: 14px; font-weight: 700; cursor: pointer; font-family: inherit; width: 100%; margin-top: 12px; }
+.status-badge { display: inline-block; border-radius: 6px; padding: 3px 10px; font-size: 11px; font-weight: 600; }
+.order-item { display: flex; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #F0EDEA; }
+.order-item:last-of-type { border-bottom: none; }
+.thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 1px solid #E0DCD8; flex-shrink: 0; }
+.no-thumb { width: 64px; height: 64px; background: #F0EDEA; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #CCC; flex-shrink: 0; }
+.summary { background: #FEF9F4; border-radius: 10px; padding: 14px 16px; border: 1px solid #E8A87C; margin-top: 4px; }
+.summary-row { display: flex; justify-content: space-between; font-size: 13px; color: #6B6B80; margin-bottom: 5px; }
+.summary-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; color: #1A1A2E; border-top: 1px solid #E8A87C; padding-top: 10px; margin-top: 6px; }
+.empty { text-align: center; color: #B0AAA4; font-size: 14px; padding: 32px 0; }
+.loading { text-align: center; color: #A0A0B8; font-size: 13px; padding: 24px 0; }
+.customer-header { background: #1A1A2E; border-radius: 12px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; }
 </style>
 </head>
 <body>
 <div class="header">
   <div class="header-inner">
-    <div class="header-eyebrow">代購管理</div>
-    <h1>CC 選物代購</h1>
-    <p>訂單登記系統 ── 上傳商品圖片 → 填寫資料 → 即時同步給團隊</p>
-    <div style="margin-top:8px;display:inline-block;background:#E8A87C;color:#1A1A2E;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:700" id="header-trip-label">📍 CC六月連線/選物訂單</div>
-  </div>
-</div>
-<div class="tabs">
-  <div class="tabs-inner">
-    <button class="tab-btn active" onclick="switchTab('orders')">📋 訂單列表</button>
-    <button class="tab-btn" onclick="switchTab('picking')">📋 訂單整理</button>
-    <button class="tab-btn" onclick="switchTab('shipping')">🚚 出貨單</button>
-    <button class="tab-btn" onclick="switchTab('customer')">👤 客人查詢</button>
+    <div class="header-eyebrow">CC 選物代購</div>
+    <h1>訂單查詢</h1>
+    <p>選擇你的暱稱，查看每團訂單內容</p>
   </div>
 </div>
 
 <div class="main">
-  <!-- 訂單列表 -->
-  <div id="orders-tab">
-    <div class="card">
-      <div class="card-title">新增訂單</div>
-      <div style="margin-bottom:16px">
-        <label>商品圖片</label>
-        <div style="display:flex;gap:14px;align-items:flex-start;margin-top:5px">
-          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()"
-            ondragover="event.preventDefault();this.style.borderColor='#E8A87C'"
-            ondragleave="this.style.borderColor='#C8C4BE'"
-            ondrop="handleDrop(event)">
-            <span style="font-size:24px">📷</span>
-          </div>
-          <div class="upload-hint">點擊或拖曳圖片上傳<br>
-            <div id="ai-status" style="display:none;margin-top:6px;font-size:12px;color:#E8A87C;">🔍 AI 辨識中…</div>
-            <div id="ai-result" style="display:none;margin-top:6px;font-size:12px;color:#2E7D32;"></div>
-            <button class="remove-btn" id="remove-btn" style="display:none" onclick="removeImage()">✕ 移除圖片</button>
-          </div>
-        </div>
-        <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFileInput(this)">
-      </div>
-      <div class="form-grid">
-        <div class="form-group"><label>暱稱 *</label><input type="text" id="f-nickname" placeholder="客人暱稱"></div>
-        <div class="form-group"><label>商品 *</label><input type="text" id="f-item" placeholder="如：上衣、襪子、零食"></div>
-        <div class="form-group"><label>尺寸/規格</label><input type="text" id="f-size" placeholder="如：粉100、草莓口味、藍S"></div>
-        <div class="form-group"><label>數量</label><input type="number" id="f-quantity" placeholder="如：1、2" min="1"></div>
-        <div class="form-group"><label>日幣原價 ¥</label><input type="number" id="f-price-jpy" placeholder="如：1500" oninput="calcFormTwd()"></div>
-        <div class="form-group"><label>匯率（¥1=NT$?）</label><input type="number" id="f-rate" step="0.01" placeholder="如：0.22" oninput="calcFormTwd()"></div>
-        <div class="form-group"><label>換算台幣（自動）</label><input type="text" id="f-calc-twd" placeholder="自動計算" readonly style="background:#F5F3EF;color:#6B6B80"></div>
-        <div class="form-group"><label>台幣售價（直接填）</label><input type="number" id="f-price-twd" placeholder="填了優先使用"></div>
-        <div class="form-group full"><label>廠商</label><input type="text" id="f-vendor" placeholder="廠商名稱"></div>
-      </div>
-      <div class="error" id="form-error" style="display:none"></div>
-      <div class="success" id="form-success" style="display:none"></div>
-      <button class="btn-primary" id="add-btn" onclick="addOrder()">+ 加入訂單</button>
-    </div>
-
-    <div style="background:#fff;border-radius:12px;padding:18px;border:1px solid #E8E4DF;display:flex;flex-direction:column;gap:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:600;color:#1A1A2E">目前團次：</span>
-          <span id="current-trip-label" style="background:#E8A87C;color:#1A1A2E;border-radius:6px;padding:4px 12px;font-size:13px;font-weight:700">第1團</span>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button onclick="toggleArchived()" id="archive-btn" style="background:transparent;border:1.5px solid #DDD8D0;border-radius:6px;padding:7px 14px;font-size:12px;color:#6B6B80;cursor:pointer;font-family:inherit">📦 查看歷史</button>
-          <button onclick="closeTrip()" style="background:#D64045;color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">🔒 結團</button>
-        </div>
-      </div>
-      <div style="border-top:1px solid #F0EDEA;padding-top:12px">
-        <div style="font-size:11px;font-weight:600;color:#6B6B80;margin-bottom:8px">切換團次</div>
-        <div style="display:flex;gap:8px">
-          <select id="trip-select" style="flex:1;border:1.5px solid #DDD8D0;border-radius:6px;padding:8px 10px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-            <option value="CC六月連線/選物訂單">CC六月連線/選物訂單</option>
-          </select>
-          <button onclick="switchTrip()" style="background:#1A1A2E;color:#E8A87C;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">切換</button>
-        </div>
-      </div>
-      <div style="border-top:1px solid #F0EDEA;padding-top:12px">
-        <div style="font-size:11px;font-weight:600;color:#6B6B80;margin-bottom:8px">新增團次</div>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="new-trip-input" placeholder="如：2026年7月日本團" style="flex:1;border:1.5px solid #DDD8D0;border-radius:6px;padding:8px 10px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          <button onclick="addTrip()" style="background:#1A1A2E;color:#E8A87C;border:none;border-radius:6px;padding:8px 16px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">＋ 新增</button>
-        </div>
-      </div>
-    </div>
-        <div class="loading" id="loading-orders">載入中…</div>
-    <div class="card" id="table-card" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div><span style="font-weight:700;color:#1A1A2E;font-size:15px">所有訂單</span><span class="badge" id="order-count">0 筆</span></div>
-        <button class="btn-secondary" onclick="downloadCSV()">↓ 下載 CSV</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th>圖片</th><th>訂單編號</th><th>日期</th><th>暱稱</th><th>商品</th><th>尺寸</th><th>數量</th><th>廠商</th><th>日幣</th><th>台幣</th><th></th></tr>
-          </thead>
-          <tbody id="order-tbody"></tbody>
-        </table>
-      </div>
-      <div class="table-note">* 資料即時同步，所有人都能看到最新訂單</div>
-    </div>
+  <div class="card">
+    <div class="card-title">查詢我的訂單</div>
+    <label>選擇你的暱稱</label>
+    <select id="name-select" onchange="showOrders()">
+      <option value="">載入中…</option>
+    </select>
   </div>
 
-  <!-- 揀貨單 -->
-  <div id="picking-tab" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div><span style="font-weight:700;color:#1A1A2E;font-size:15px">訂單整理</span><span id="picking-count" style="margin-left:10px;font-size:13px;color:#6B6B80"></span></div>
-    </div>
-    <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #E8E4DF;margin-bottom:16px">
-      <label style="font-size:12px;font-weight:600;color:#6B6B80;margin-bottom:6px;display:block">選擇客人</label>
-      <select id="picking-customer-select" onchange="renderPickingForCustomer()"
-        style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-        <option value="">-- 選擇客人 --</option>
-        <option value="__ALL__">📋 顯示全部商品（按時間排序）</option>
-      </select>
-    </div>
-    <div id="picking-empty" class="empty" style="display:none">請從上方選擇客人</div>
-    <div class="picking-cards" id="picking-cards"></div>
-  </div>
-
-  <!-- 出貨單 -->
-  <div id="shipping-tab" style="display:none">
-    <div class="print-header"><h2>CC 選物代購</h2><p>出貨單</p></div>
-    <div class="shipping-top">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-        <div><span style="font-weight:700;color:#1A1A2E;font-size:15px">出貨單</span><span id="shipping-count" style="margin-left:10px;font-size:13px;color:#6B6B80"></span></div>
-        <button class="btn-secondary" onclick="printShippingForCustomer()">🖨 列印</button>
-      </div>
-      <!-- 選擇客人 -->
-      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #E8E4DF;margin-bottom:16px">
-        <label style="font-size:12px;font-weight:600;color:#6B6B80;margin-bottom:6px;display:block">選擇客人</label>
-        <select id="shipping-customer-select" onchange="renderShippingForCustomer()"
-          style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          <option value="">-- 選擇客人 --</option>
-        </select>
-      </div>
-      <!-- 團次總售出金額 -->
-      <div style="background:#fff;border-radius:12px;padding:16px;border:1px solid #E8E4DF;margin-bottom:16px">
-        <label style="font-size:12px;font-weight:600;color:#6B6B80;margin-bottom:6px;display:block">查詢團次總售出金額</label>
-        <div style="display:flex;gap:8px">
-          <select id="trip-revenue-select"
-            style="flex:1;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-            <option value="">-- 選擇團次 --</option>
-          </select>
-          <button onclick="showTripRevenue()" style="background:#1A1A2E;color:#E8A87C;border:none;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">查詢</button>
-        </div>
-        <div id="trip-revenue-result" style="display:none;margin-top:12px;background:#FEF9F4;border-radius:8px;padding:12px 16px;border:1px solid #E8A87C">
-          <div style="font-size:13px;color:#6B6B80" id="trip-revenue-label"></div>
-          <div style="font-size:22px;font-weight:700;color:#E8A87C;margin-top:4px" id="trip-revenue-amount"></div>
-        </div>
-      </div>
-    </div>
-    <div id="shipping-empty" class="empty" style="display:none">請從上方選擇客人</div>
-    <div class="shipping-cards" id="shipping-cards"></div>
-  </div>
-  <!-- 客人查詢 -->
-  <div id="customer-tab" style="display:none">
-    <div class="card">
-      <div class="card-title">客人查詢</div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:12px;font-weight:600;color:#6B6B80;margin-bottom:5px;display:block">選擇客人</label>
-        <select id="customer-select" onchange="showCustomerOrders()"
-          style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          <option value="">-- 選擇客人 --</option>
-        </select>
-      </div>
-    </div>
-    <div id="customer-orders" style="display:flex;flex-direction:column;gap:14px;margin-top:4px"></div>
-  </div>
+  <div id="result"></div>
 </div>
 
 <script>
@@ -277,967 +59,138 @@ const SUPABASE_URL = 'https://zwabpiysvlqvqunauwyj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3YWJwaXlzdmxxdnF1bmF1d3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA1MzgsImV4cCI6MjA5NzY4NjUzOH0.-jx1ikazqqKRta-8lEoifeKR9bVVm_E00m4e17q_6z8';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let orders = [];
-let currentImageFile = null;
-let currentTrip = 'CC六月連線/選物訂單';
-let showArchived = false;
-// Store picking data locally (rate, price_jpy, shipping, extra, discount, note per order group)
-let pickingData = {};
+const STATUS_LABEL = { pending:'處理中', success:'採購成功', outofstock:'斷貨', preparing:'出貨準備中', done:'已完成' };
+const STATUS_COLOR = { pending:'#A0A0B8', success:'#2E7D32', outofstock:'#D64045', preparing:'#E65100', done:'#1565C0' };
+const STATUS_BG = { pending:'#F0F0F8', success:'#E8F5E9', outofstock:'#FFEBEE', preparing:'#FFF3E0', done:'#E3F2FD' };
 
-// Store known trips locally
-let knownTrips = ['CC六月連線/選物訂單'];
-
-function updateTripUI() {
-  const archiveBtn = document.getElementById('archive-btn');
-  const label = document.getElementById('current-trip-label');
-  const headerLabel = document.getElementById('header-trip-label');
-  const sel = document.getElementById('trip-select');
-  if (archiveBtn) archiveBtn.textContent = showArchived ? '📋 回到本團' : '📦 查看歷史';
-  if (label) label.textContent = showArchived ? '查看歷史中' : currentTrip;
-  if (headerLabel) headerLabel.textContent = showArchived ? '📦 查看歷史中' : `📍 ${currentTrip}`;
-
-  // Update trips from all orders
-  const fromDB = [...new Set((window._allOrders||[]).map(o => o.trip || '第1團'))];
-  fromDB.forEach(t => { if (!knownTrips.includes(t)) knownTrips.push(t); });
-
-  if (sel) {
-    sel.innerHTML = knownTrips.map(t =>
-      `<option value="${t}" ${t===currentTrip?'selected':''}>${t}</option>`
-    ).join('');
-  }
-}
-
-function switchTrip() {
-  const val = document.getElementById('trip-select').value;
-  if (!val) return;
-  currentTrip = val;
-  showArchived = false;
-  loadOrders();
-}
-
-function addTrip() {
-  const val = document.getElementById('new-trip-input').value.trim();
-  if (!val) { alert('請輸入新團次名稱'); return; }
-  if (knownTrips.includes(val)) { alert('這個團次已經存在！'); return; }
-  knownTrips.push(val);
-  currentTrip = val;
-  showArchived = false;
-  document.getElementById('new-trip-input').value = '';
-  loadOrders();
-  alert(`已新增並切換到「${val}」！`);
-}
-
-
-
-function closeTrip() {
-  const pwd = prompt('請輸入結團密碼：');
-  if (pwd !== '888') { alert('密碼錯誤！'); return; }
-  if (!confirm(`確定結束「${currentTrip}」？`)) return;
-  showArchived = true;
-  loadOrders();
-  alert(`「${currentTrip}」已結團！需要開新團時請在「新增團次」輸入名稱。`);
-}
-
-function toggleArchived() {
-  showArchived = !showArchived;
-  loadOrders();
-}
-
-function generateOrderNo() {
-  const d = new Date().toISOString().slice(0,10).replace(/-/g,'');
-  const r = Math.floor(Math.random()*900+100);
-  return `CC${d}-${r}`;
-}
+let allOrders = [];
+let groups = {};
 
 async function loadOrders() {
-  const { data, error } = await sb.from('orders').select('*').order('created_at', { ascending: false });
-  document.getElementById('loading-orders').style.display = 'none';
-  if (error) { console.error(error); return; }
-  window._allOrders = data || [];
-  orders = showArchived ? window._allOrders : window._allOrders.filter(o => (o.trip || '第1團') === currentTrip);
-  updateTripUI();
-  // Populate pickingData from DB values
-  orders.forEach(o => {
-    if (!pickingData[o.nickname]) pickingData[o.nickname] = { shipping: '', extra: '', discount: '', note: '', items: {} };
-    if (o.shipping) pickingData[o.nickname].shipping = o.shipping;
-    if (o.extra) pickingData[o.nickname].extra = o.extra;
-    if (o.discount) pickingData[o.nickname].discount = o.discount;
-    if (o.note) pickingData[o.nickname].note = o.note;
-    if (!pickingData[o.nickname].items[o.id]) pickingData[o.nickname].items[o.id] = { price_jpy: '', rate: '' };
-    if (o.price_jpy) pickingData[o.nickname].items[o.id].price_jpy = o.price_jpy;
-    if (o.rate) pickingData[o.nickname].items[o.id].rate = o.rate;
-    if (o.price_twd) pickingData[o.nickname].items[o.id].price_twd = o.price_twd;
-    if (o.status) pickingData[o.nickname].items[o.id].status = o.status;
+  const { data } = await sb.from('orders').select('*').order('created_at', { ascending: false });
+  allOrders = data || [];
+
+  // Find latest trip
+  const trips = [...new Set(allOrders.map(o => o.trip || '第1團'))];
+  // Sort trips to find latest (by number)
+  trips.sort((a, b) => {
+    const na = parseInt(a.replace(/[^0-9]/g,'')) || 0;
+    const nb = parseInt(b.replace(/[^0-9]/g,'')) || 0;
+    return nb - na;
   });
-  renderTable();
-  renderPicking();
-  renderShipping();
-}
+  const latestTrip = trips[0] || '第1團';
 
-function handleFileInput(input) { if (input.files && input.files[0]) setImageFile(input.files[0]); }
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('upload-zone').style.borderColor = '#C8C4BE';
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) setImageFile(file);
-}
-async function setImageFile(file) {
-  currentImageFile = file;
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    document.getElementById('upload-zone').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
-    document.getElementById('remove-btn').style.display = 'inline-block';
-    document.getElementById('ai-status').style.display = 'block';
-    document.getElementById('ai-result').style.display = 'none';
-    try {
-      const base64 = e.target.result.split(',')[1];
-      const resp = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6', max_tokens: 300,
-          system: '你是代購訂單辨識助手。這是一張社群媒體留言截圖，留言者的暱稱固定顯示在圖片左上角頭像的右邊。請只辨識該暱稱文字。只回傳JSON，不加任何說明：{"nickname":"..."}',
-          messages: [{ role: 'user', content: [
-            { type: 'image', source: { type: 'base64', media_type: file.type, data: base64 } },
-            { type: 'text', text: '請辨識圖片左上角頭像旁邊的留言者暱稱。' }
-          ]}]
-        })
-      });
-      const data = await resp.json();
-      const text = (data.content||[]).map(i=>i.text||'').join('');
-      const result = JSON.parse(text.replace(/```json|```/g,'').trim());
-      if (result.nickname && result.nickname !== '-') document.getElementById('f-nickname').value = result.nickname;
-      document.getElementById('ai-status').style.display = 'none';
-      document.getElementById('ai-result').style.display = 'block';
-      document.getElementById('ai-result').style.color = '#2E7D32';
-      document.getElementById('ai-result').textContent = `✓ 辨識完成：${result.nickname||'?'}`;
-    } catch {
-      document.getElementById('ai-status').style.display = 'none';
-      document.getElementById('ai-result').style.display = 'block';
-      document.getElementById('ai-result').style.color = '#A0A0B8';
-      document.getElementById('ai-result').textContent = '辨識失敗，請手動填寫';
-    }
-  };
-  reader.readAsDataURL(file);
-}
-function removeImage() {
-  currentImageFile = null;
-  document.getElementById('upload-zone').innerHTML = '<span style="font-size:24px">📷</span>';
-  document.getElementById('remove-btn').style.display = 'none';
-  document.getElementById('file-input').value = '';
-  document.getElementById('ai-status').style.display = 'none';
-  document.getElementById('ai-result').style.display = 'none';
-}
-
-function calcFormTwd() {
-  const jpy = parseFloat(document.getElementById('f-price-jpy').value) || 0;
-  const rate = parseFloat(document.getElementById('f-rate').value) || 0;
-  const calc = document.getElementById('f-calc-twd');
-  if (jpy && rate) {
-    calc.value = 'NT$' + Math.round(jpy * rate).toLocaleString();
-  } else {
-    calc.value = '';
-  }
-}
-
-async function addOrder() {
-  const nickname = document.getElementById('f-nickname').value.trim();
-  const item = document.getElementById('f-item').value.trim();
-  const size = document.getElementById('f-size').value.trim();
-  const quantity = document.getElementById('f-quantity').value.trim();
-  const vendor = document.getElementById('f-vendor').value.trim();
-  const price_jpy = parseFloat(document.getElementById('f-price-jpy').value) || 0;
-  const rate = parseFloat(document.getElementById('f-rate').value) || 0;
-  const price_twd = parseFloat(document.getElementById('f-price-twd').value) || 0;
-  const errEl = document.getElementById('form-error');
-  const successEl = document.getElementById('form-success');
-  const btn = document.getElementById('add-btn');
-  errEl.style.display = 'none'; successEl.style.display = 'none';
-  if (!nickname || !item) { errEl.textContent = '請至少填寫暱稱和商品'; errEl.style.display = 'block'; return; }
-  btn.disabled = true; btn.textContent = '儲存中…';
-  let image_url = null;
-  if (currentImageFile) {
-    const ext = currentImageFile.name.split('.').pop();
-    const fileName = `${Date.now()}.${ext}`;
-    const { error: upErr } = await sb.storage.from('product-image').upload(fileName, currentImageFile);
-    if (!upErr) {
-      const { data: urlData } = sb.storage.from('product-image').getPublicUrl(fileName);
-      image_url = urlData.publicUrl;
-    }
-  }
-  const { error } = await sb.from('orders').insert([{ nickname, item, size, quantity, vendor, image_url, trip: currentTrip, price_jpy, rate, price_twd }]);
-  btn.disabled = false; btn.textContent = '+ 加入訂單';
-  if (error) { errEl.textContent = '儲存失敗：' + error.message; errEl.style.display = 'block'; return; }
-  successEl.textContent = '✓ 訂單已儲存！'; successEl.style.display = 'block';
-  setTimeout(() => successEl.style.display = 'none', 4000);
-  ['f-nickname','f-item','f-size','f-quantity','f-vendor','f-price-jpy','f-rate','f-price-twd','f-calc-twd'].forEach(id => document.getElementById(id).value = '');
-  removeImage(); loadOrders();
-}
-
-async function deleteOrder(id) {
-  const pwd = prompt('請輸入刪除密碼：');
-  if (pwd !== '888') { alert('密碼錯誤！'); return; }
-  const { error } = await sb.from('orders').delete().eq('id', Number(id));
-  if (error) { alert('刪除失敗：' + error.message); return; }
-  loadOrders();
-}
-
-// Store generated order numbers per nickname
-const shippingOrderNos = {};
-function shipOrderNo(name, items) {
-  if (!shippingOrderNos[name]) {
-    const d = new Date().toISOString().slice(0,10).replace(/-/g,'');
-    const r = Math.floor(Math.random()*900+100);
-    shippingOrderNos[name] = `CC${d}-${r}`;
-  }
-  return shippingOrderNos[name];
-}
-
-function formatDate(str) {
-  if (!str) return '-';
-  return str.slice(0,10);
-}
-
-function renderTable() {
-  const tbody = document.getElementById('order-tbody');
-  document.getElementById('table-card').style.display = orders.length ? 'block' : 'none';
-  document.getElementById('order-count').textContent = orders.length + ' 筆';
-  // 訂單列表：最新的在上面
-  const tableOrders = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  tbody.innerHTML = tableOrders.map(o => `
-    <tr>
-      <td>${o.image_url ? `<img class="thumb" src="${esc(o.image_url)}">` : '<div class="no-img">無圖</div>'}</td>
-      <td><span class="order-no-tag">${esc(o.order_no)||'-'}</span></td>
-      <td style="font-size:12px;color:#6B6B80">${formatDate(o.created_at)}</td>
-      <td style="font-weight:600;color:#1A1A2E">${esc(o.nickname)}</td>
-      <td>${esc(o.item)}</td>
-      <td>${esc(o.size)||'-'}</td>
-      <td style="text-align:center">${esc(o.quantity)||'-'}</td>
-      <td style="color:#6B6B80">${esc(o.vendor)||'-'}</td>
-      <td style="font-size:12px;color:#6B6B80">${o.price_jpy > 0 ? '¥'+Number(o.price_jpy).toLocaleString() : '-'}</td>
-      <td style="font-weight:600;color:#1A1A2E;font-size:13px">${(() => {
-        const pd = getItemPickingData(o.nickname, o.id);
-        if (pd.price_twd && parseFloat(pd.price_twd) > 0) return 'NT$'+Math.round(parseFloat(pd.price_twd)).toLocaleString();
-        if (o.price_twd && o.price_twd > 0) return 'NT$'+Math.round(o.price_twd).toLocaleString();
-        if (o.price_jpy && o.rate) return 'NT$'+Math.round(o.price_jpy * o.rate).toLocaleString();
-        return '-';
-      })()}</td>
-      <td><button class="del-btn" onclick="deleteOrder(${o.id})">×</button></td>
-    </tr>`).join('');
-}
-
-function groupByNickname() {
-  const groups = {};
-  const displayNames = {};
-  // Sort ascending (oldest first) for picking/shipping/customer tabs
-  const sorted = [...orders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  sorted.forEach(o => {
+  // Group by nickname (case-insensitive) - show ALL orders regardless of trip
+  const keyMap = {};
+  const displayMap = {};
+  allOrders.forEach(o => {
     const key = o.nickname.toLowerCase();
-    if (!groups[key]) {
-      groups[key] = [];
-      displayNames[key] = o.nickname;
-    }
-    groups[key].push(o);
+    if (!keyMap[key]) { keyMap[key] = []; displayMap[key] = o.nickname; }
+    keyMap[key].push(o);
   });
-  const result = {};
-  Object.keys(groups).forEach(key => {
-    result[displayNames[key]] = groups[key];
-  });
-  return result;
+  groups = {};
+  Object.keys(keyMap).forEach(k => { groups[displayMap[k]] = keyMap[k]; });
+
+  // Populate select
+  const sel = document.getElementById('name-select');
+  const names = Object.keys(groups).sort();
+  // Update subtitle
+  const subtitle = document.getElementById('trip-subtitle');
+  if (subtitle) subtitle.textContent = `目前團次：${latestTrip}`;
+
+  sel.innerHTML = `<option value="">-- 選擇你的暱稱 --</option>` +
+    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
 }
 
-function getPickingData(nickname) {
-  if (!pickingData[nickname]) {
-    pickingData[nickname] = { shipping: '', extra: '', discount: '', note: '', items: {} };
-  }
-  return pickingData[nickname];
-}
-
-function getItemPickingData(nickname, id) {
-  const pd = getPickingData(nickname);
-  if (!pd.items[id]) pd.items[id] = { price_jpy: '', rate: '', price_twd: '', status: 'pending' };
-  return pd.items[id];
-}
-
-const STATUS_OPTIONS_P1 = [
-  { value: 'pending', label: '處理中', color: '#A0A0B8', bg: '#F0F0F8' },
-  { value: 'success', label: '採購成功', color: '#2E7D32', bg: '#E8F5E9' },
-  { value: 'outofstock', label: '斷貨', color: '#D64045', bg: '#FFEBEE' },
-  { value: 'preparing', label: '出貨準備中', color: '#E65100', bg: '#FFF3E0' },
-  { value: 'done', label: '已完成', color: '#1565C0', bg: '#E3F2FD' },
-];
-
-function getStatusOptP1(status) {
-  return STATUS_OPTIONS_P1.find(s => s.value === status) || STATUS_OPTIONS_P1[0];
-}
-
-const COUNT_STATUSES = ['success', 'preparing', 'done']; // 只有這些狀態才計入金額
-
-function statusCountsToTotal(status) {
-  return COUNT_STATUSES.includes(status);
-}
-
-function calcItemTwd(nickname, id) {
-  const d = getItemPickingData(nickname, id);
-  if (!statusCountsToTotal(d.status || 'pending')) return 0; // 處理中、斷貨不計入
-  if (d.price_twd && parseFloat(d.price_twd) > 0) return parseFloat(d.price_twd);
-  const jpy = parseFloat(d.price_jpy) || 0;
-  const rate = parseFloat(d.rate) || 0;
-  return jpy * rate;
-}
-
-function calcGroupTotal(nickname, items) {
-  const pd = getPickingData(nickname);
-  const itemsTotal = items.reduce((s, o) => s + calcItemTwd(nickname, o.id) * (parseInt(o.quantity)||1), 0);
-  const shipping = parseFloat(pd.shipping) || 0;
-  const extra = parseFloat(pd.extra) || 0;
-  const discount = parseFloat(pd.discount) || 0;
-  return itemsTotal + shipping + extra - discount;
-}
-
-function updatePickingField(nickname, field, val) {
-  getPickingData(nickname)[field] = val;
-  rerenderGroupTotal(nickname);
-}
-
-function updateItemField(nickname, id, field, val) {
-  getItemPickingData(nickname, id)[field] = val;
-  rerenderItemTwd(nickname, id);
-  rerenderGroupTotal(nickname);
-}
-
-function rerenderItemTwd(nickname, id) {
-  const twd = calcItemTwd(nickname, id);
-  const el = document.getElementById(`twd-${id}`);
-  if (el) el.textContent = twd > 0 ? `NT$${Math.round(twd).toLocaleString()}` : '-';
-}
-
-let pendingEdits = {};
-
-async function savePicking(nickname) {
-  const groups = groupByNickname();
-  const items = groups[nickname] || [];
-  const pd = getPickingData(nickname);
-  const btn = document.getElementById(`save-picking-${CSS.escape(nickname)}`);
-  const msg = document.getElementById(`save-msg-${CSS.escape(nickname)}`);
-  if (btn) { btn.disabled = true; btn.textContent = '儲存中…'; }
-
-  for (const o of items) {
-    const itemData = getItemPickingData(nickname, o.id);
-    const edits = pendingEdits[o.id] || {};
-    await sb.from('orders').update({
-      price_jpy: parseFloat(itemData.price_jpy) || 0,
-      rate: parseFloat(itemData.rate) || 0,
-      price_twd: parseFloat(itemData.price_twd) || 0,
-      status: itemData.status || 'pending',
-      shipping: parseFloat(pd.shipping) || 0,
-      extra: parseFloat(pd.extra) || 0,
-      discount: parseFloat(pd.discount) || 0,
-      note: pd.note || '',
-      ...(edits.item ? { item: edits.item } : {}),
-      ...(edits.size !== undefined ? { size: edits.size } : {}),
-      ...(edits.quantity ? { quantity: edits.quantity } : {}),
-    }).eq('id', o.id);
-  }
-
-  // Clear pending edits for this group
-  items.forEach(o => delete pendingEdits[o.id]);
-
-  if (btn) { btn.disabled = false; btn.textContent = '💾 儲存'; }
-  if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000); }
-  loadOrders();
-}
-
-function rerenderGroupTotal(nickname) {
-  const groups = groupByNickname();
-  const items = groups[nickname] || [];
-  const total = calcGroupTotal(nickname, items);
-  const el = document.getElementById(`group-total-${CSS.escape(nickname)}`);
-  if (el) el.textContent = total > 0 ? `NT$${Math.round(total).toLocaleString()}` : '-';
-}
-
-function renderPicking() {
-  const groups = groupByNickname();
-  const names = Object.keys(groups);
-  document.getElementById('picking-count').textContent = names.length ? `共 ${names.length} 位客人` : '';
-
-  // Update select options
-  const sel = document.getElementById('picking-customer-select');
-  const current = sel ? sel.value : '';
-  if (sel) {
-    sel.innerHTML = '<option value="">-- 選擇客人 --</option>' +
-      '<option value="__ALL__" ' + (current==='__ALL__'?'selected':'') + '>📋 顯示全部商品（按時間排序）</option>' +
-      names.map(n => `<option value="${esc(n)}" ${n===current?'selected':''}>${esc(n)}</option>`).join('');
-  }
-
-  renderPickingForCustomer();
-}
-
-function renderPickingForCustomer() {
-  const sel = document.getElementById('picking-customer-select');
-  const selected = sel ? sel.value : '';
-
-  document.getElementById('picking-empty').style.display = (!selected) ? 'block' : 'none';
-  if (!selected) {
-    document.getElementById('picking-empty').textContent = '請從上方選擇客人';
-    document.getElementById('picking-cards').innerHTML = '';
-    return;
-  }
-
-  // 全部商品模式
-  if (selected === '__ALL__') {
-    renderPickingAll();
-    return;
-  }
-
-  const groups = groupByNickname();
-  const names = [selected];
-  document.getElementById('picking-cards').innerHTML = names.map(name => {
-    const items = groups[name];
-    const firstOrder = items[0];
-    const pd = getPickingData(name);
-    return `<div class="picking-card">
-      <div class="picking-card-header">
-        <div style="display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:10px">
-            <div class="avatar">${esc(name.charAt(0).toUpperCase())}</div>
-            <div>
-              <span style="color:#fff;font-weight:700;font-size:15px">${esc(name)}</span>
-              <div style="margin-top:2px">
-                <span class="order-no-tag" style="background:#2A2A4E;color:#A0A0C8">${esc(firstOrder?.order_no||'-')}</span>
-                <span style="color:#A0A0B8;font-size:11px;margin-left:6px">${formatDate(firstOrder?.created_at)}</span>
-              </div>
-            </div>
-          </div>
-          <span style="color:#E8A87C;font-size:12px;font-weight:600">共 ${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</span>
-        </div>
-      </div>
-
-      ${items.map(o => `<div class="picking-item">
-        <div class="picking-item-top">
-          ${o.image_url ? `<img src="${esc(o.image_url)}" class="item-thumb">` : '<div class="item-no-img">無圖</div>'}
-          <div style="flex:1">
-            <div style="font-weight:700;color:#1A1A2E;font-size:14px">${esc(o.item)}</div>
-            <div style="font-size:12px;color:#6B6B80;margin-top:3px">
-              ${o.size?`尺寸：${esc(o.size)}　`:''}數量：${o.quantity||1}　廠商：${esc(o.vendor)||'-'}
-            </div>
-            ${(() => { const s = getStatusOptP1(getItemPickingData(name, o.id).status); return `<span style="display:inline-block;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color};margin-top:4px">${s.label}</span>`; })()}
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;padding:10px;background:#F9F7F5;border-radius:8px">
-          <div class="field-box" style="grid-column:1/-1">
-            <div class="field-lbl">商品名稱</div>
-            <input class="field-inp" type="text" value="${esc(o.item)}"
-              oninput="pendingEdits[${o.id}]=pendingEdits[${o.id}]||{}; pendingEdits[${o.id}].item=this.value">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">尺寸/規格</div>
-            <input class="field-inp" type="text" value="${esc(o.size||'')}"
-              oninput="pendingEdits[${o.id}]=pendingEdits[${o.id}]||{}; pendingEdits[${o.id}].size=this.value">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">數量</div>
-            <input class="field-inp" type="number" min="1" value="${o.quantity||1}"
-              oninput="pendingEdits[${o.id}]=pendingEdits[${o.id}]||{}; pendingEdits[${o.id}].quantity=this.value">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">廠商</div>
-            <input class="field-inp" type="text" value="${esc(o.vendor||'')}"
-              oninput="pendingEdits[${o.id}]=pendingEdits[${o.id}]||{}; pendingEdits[${o.id}].vendor=this.value">
-          </div>
-        </div>
-        <div class="picking-fields">
-          <div class="field-box">
-            <div class="field-lbl">日幣原價 ¥</div>
-            <input class="field-inp" type="number" placeholder="如：1500"
-              value="${getItemPickingData(name, o.id).price_jpy}"
-              oninput="updateItemField('${esc(name)}', ${o.id}, 'price_jpy', this.value)">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">匯率（¥1=NT$?）</div>
-            <input class="field-inp" type="number" step="0.01" placeholder="如：0.22"
-              value="${getItemPickingData(name, o.id).rate}"
-              oninput="updateItemField('${esc(name)}', ${o.id}, 'rate', this.value)">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">換算台幣（自動）</div>
-            <div class="field-calc" id="twd-${o.id}">
-              ${calcItemTwd(name, o.id) > 0 ? `NT$${Math.round(calcItemTwd(name, o.id)).toLocaleString()}` : '-'}
-            </div>
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">直接輸入台幣售價</div>
-            <input class="field-inp" type="number" placeholder="填了優先使用"
-              value="${getItemPickingData(name, o.id).price_twd}"
-              oninput="updateItemField('${esc(name)}', ${o.id}, 'price_twd', this.value)">
-          </div>
-          <div class="field-box" style="grid-column:1/-1">
-            <div class="field-lbl">商品狀態</div>
-            <select class="field-inp" onchange="updateItemField('${esc(name)}', ${o.id}, 'status', this.value); rerenderGroupTotal('${esc(name)}')">
-              ${STATUS_OPTIONS_P1.map(s => `<option value="${s.value}" ${getItemPickingData(name, o.id).status === s.value ? 'selected' : ''}>${s.label}</option>`).join('')}
-            </select>
-          </div>
-        </div>
-      </div>`).join('')}
-
-      <div class="picking-footer">
-        <div class="picking-footer-grid">
-          <div class="field-box">
-            <div class="field-lbl">運費 NT$</div>
-            <input class="field-inp" type="number" placeholder="0" value="${pd.shipping}"
-              oninput="updatePickingField('${esc(name)}', 'shipping', this.value)">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">其他加價 NT$</div>
-            <input class="field-inp" type="number" placeholder="0" value="${pd.extra}"
-              oninput="updatePickingField('${esc(name)}', 'extra', this.value)">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">優惠折扣 NT$</div>
-            <input class="field-inp" type="number" placeholder="0" value="${pd.discount}"
-              oninput="updatePickingField('${esc(name)}', 'discount', this.value)">
-          </div>
-          <div class="field-box">
-            <div class="field-lbl">備註</div>
-            <input class="field-inp" type="text" placeholder="備註" value="${esc(pd.note)}"
-              oninput="updatePickingField('${esc(name)}', 'note', this.value)">
-          </div>
-        </div>
-        <div class="picking-total-row">
-          <div>
-            <div style="font-size:13px;color:#6B6B80;margin-bottom:6px">商品台幣合計＋運費＋加價－折扣</div>
-            <span style="font-weight:700;font-size:17px;color:#E8A87C" id="group-total-${CSS.escape(name)}">
-              ${calcGroupTotal(name, items) > 0 ? `NT$${Math.round(calcGroupTotal(name, items)).toLocaleString()}` : '-'}
-            </span>
-          </div>
-          <button class="btn-secondary" id="save-picking-${CSS.escape(name)}"
-            onclick="savePicking('${esc(name)}')" style="align-self:flex-end">
-            💾 儲存
-          </button>
-        </div>
-        <div id="save-msg-${CSS.escape(name)}" style="display:none;font-size:12px;color:#2E7D32;margin-top:6px;text-align:right">✓ 已儲存</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderPickingAll() {
-  const allSorted = [...orders].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-  const container = document.getElementById('picking-cards');
-
-  if (!allSorted.length) {
-    container.innerHTML = '<div class="empty">尚無訂單</div>';
-    return;
-  }
-
-  let html = '<div style="background:#fff;border-radius:12px;overflow:hidden;border:1px solid #E8E4DF;box-shadow:0 2px 10px rgba(0,0,0,0.05)">';
-  html += '<div style="background:#1A1A2E;padding:12px 18px;display:flex;justify-content:space-between;align-items:center">';
-  html += '<span style="color:#fff;font-weight:700;font-size:15px">全部商品</span>';
-  html += '<span style="color:#E8A87C;font-size:12px;font-weight:600">共 ' + allSorted.reduce((s,o)=>s+(parseInt(o.quantity)||1),0) + ' 件</span>';
-  html += '</div>';
-
-  allSorted.forEach(function(o, idx) {
-    const pd = getItemPickingData(o.nickname, o.id);
-    const s = getStatusOptP1(pd.status || o.status || 'pending');
-    const calcTwd = (o.price_jpy && o.rate) ? Math.round(o.price_jpy * o.rate) : 0;
-    const bg = idx % 2 === 0 ? '#fff' : '#FAFAF8';
-
-    html += '<div style="padding:12px 18px;border-bottom:1px solid #F0EDEA;background:' + bg + '">';
-    html += '<div style="display:flex;gap:12px;align-items:flex-start">';
-
-    // Image
-    if (o.image_url) {
-      html += '<img src="' + esc(o.image_url) + '" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0;border:1px solid #E0DCD8">';
-    } else {
-      html += '<div style="width:56px;height:56px;background:#F0EDEA;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#CCC;flex-shrink:0">無圖</div>';
-    }
-
-    html += '<div style="flex:1;min-width:0">';
-    html += '<div style="font-weight:700;color:#1A1A2E;font-size:14px;margin-bottom:2px">' + esc(o.item) + '</div>';
-    html += '<div style="font-size:12px;color:#6B6B80">';
-    html += '<span style="font-weight:600;color:#E8A87C">' + esc(o.nickname) + '</span>';
-    if (o.size) html += '　' + esc(o.size);
-    html += '　數量：' + (o.quantity||1);
-    html += '</div>';
-
-    // Price fields
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:8px">';
-    html += '<div><div style="font-size:10px;color:#6B6B80;margin-bottom:2px">日幣 ¥</div>';
-    html += '<input type="number" value="' + (o.price_jpy||'') + '" placeholder="1500" data-id="' + o.id + '" data-field="price_jpy"';
-    html += ' style="width:100%;border:1.5px solid #DDD8D0;border-radius:6px;padding:5px 8px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit"';
-    html += ' oninput="onPickingAllInput(this)"></div>';
-
-    html += '<div><div style="font-size:10px;color:#6B6B80;margin-bottom:2px">匯率</div>';
-    html += '<input type="number" step="0.01" value="' + (o.rate||'') + '" placeholder="0.22" data-id="' + o.id + '" data-field="rate"';
-    html += ' style="width:100%;border:1.5px solid #DDD8D0;border-radius:6px;padding:5px 8px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit"';
-    html += ' oninput="onPickingAllInput(this)"></div>';
-
-    html += '<div><div style="font-size:10px;color:#6B6B80;margin-bottom:2px">換算台幣</div>';
-    html += '<input type="text" readonly id="calc-twd-' + o.id + '" value="' + (calcTwd > 0 ? 'NT$'+calcTwd.toLocaleString() : '') + '"';
-    html += ' style="width:100%;border:1.5px solid #E8E4DF;border-radius:6px;padding:5px 8px;font-size:12px;color:#6B6B80;background:#F5F3EF;outline:none;font-family:inherit"></div>';
-
-    html += '<div><div style="font-size:10px;color:#6B6B80;margin-bottom:2px">直接台幣</div>';
-    html += '<input type="number" value="' + (o.price_twd||pd.price_twd||'') + '" placeholder="直接填" data-id="' + o.id + '" data-field="price_twd"';
-    html += ' style="width:100%;border:1.5px solid #DDD8D0;border-radius:6px;padding:5px 8px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit"';
-    html += ' oninput="onPickingAllInput(this)"></div>';
-    html += '</div>';
-
-    // Status
-    html += '<div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
-    html += '<span style="display:inline-block;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;background:' + s.bg + ';color:' + s.color + '">' + s.label + '</span>';
-    html += '<select data-id="' + o.id + '" data-nickname="' + esc(o.nickname) + '" data-field="status"';
-    html += ' style="border:1.5px solid #DDD8D0;border-radius:6px;padding:3px 8px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit"';
-    html += ' onchange="onPickingAllInput(this)">';
-    STATUS_OPTIONS_P1.forEach(function(st) {
-      html += '<option value="' + st.value + '"' + ((pd.status||o.status||'pending')===st.value?' selected':'') + '>' + st.label + '</option>';
-    });
-    html += '</select>';
-    html += '<span style="font-size:11px;color:#B0A8A0;margin-left:auto">' + formatDate(o.created_at) + '</span>';
-    html += '</div>';
-
-    html += '</div></div></div>';
-  });
-
-  html += '</div>';
-  html += '<div style="margin-top:10px;text-align:center">';
-  html += '<button class="btn-secondary" onclick="saveAllPicking()" style="font-size:12px;padding:8px 20px">💾 儲存所有變更</button>';
-  html += '<div id="save-all-msg" style="display:none;font-size:12px;color:#2E7D32;margin-top:6px">✓ 已儲存</div>';
-  html += '</div>';
-
-  container.innerHTML = html;
-}
-
-function onPickingAllInput(el) {
-  const id = parseInt(el.dataset.id);
-  const field = el.dataset.field;
-  const val = el.tagName === 'SELECT' ? el.value : (parseFloat(el.value)||0);
-  pendingEdits[id] = pendingEdits[id] || {};
-  pendingEdits[id][field] = val;
-
-  // Auto calc TWD
-  if (field === 'price_jpy' || field === 'rate') {
-    const row = el.closest('div').parentElement;
-    const jpyEl = row.querySelector('[data-field="price_jpy"]');
-    const rateEl = row.querySelector('[data-field="rate"]');
-    const calcEl = document.getElementById('calc-twd-' + id);
-    const jpy = parseFloat(jpyEl?.value) || 0;
-    const rate = parseFloat(rateEl?.value) || 0;
-    if (calcEl) calcEl.value = (jpy && rate) ? 'NT$' + Math.round(jpy * rate).toLocaleString() : '';
-  }
-}
-
-
-function calcAllTwd(id, container) {
-  const inputs = container.querySelectorAll('input[type=number]');
-  const jpy = parseFloat(inputs[0]?.value) || 0;
-  const rate = parseFloat(inputs[1]?.value) || 0;
-  const calcEl = document.getElementById('calc-twd-' + id);
-  if (calcEl && jpy && rate) {
-    calcEl.value = 'NT$' + Math.round(jpy * rate).toLocaleString();
-  } else if (calcEl) {
-    calcEl.value = '';
-  }
-}
-
-async function saveAllPicking() {
-  const btn = document.getElementById('save-all-msg');
-  const saveBtn = document.querySelector('[onclick="saveAllPicking()"]');
-  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '儲存中…'; }
-
-  const keys = Object.keys(pendingEdits);
-  if (keys.length === 0) {
-    alert('沒有偵測到變更，請確認有修改欄位後再按儲存');
-    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 儲存所有變更'; }
-    return;
-  }
-
-  const allO = orders;
-  let saved = 0;
-  for (const id of keys) {
-    const edits = pendingEdits[id];
-    if (!Object.keys(edits).length) continue;
-    const { error } = await sb.from('orders').update({
-      ...(edits.status !== undefined ? { status: edits.status } : {}),
-      ...(edits.price_jpy !== undefined ? { price_jpy: edits.price_jpy } : {}),
-      ...(edits.rate !== undefined ? { rate: edits.rate } : {}),
-      ...(edits.price_twd !== undefined ? { price_twd: edits.price_twd } : {}),
-    }).eq('id', parseInt(id));
-    if (!error) saved++;
-  }
-  pendingEdits = {};
-  if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 儲存所有變更'; }
-  if (btn) { btn.textContent = `✓ 已儲存 ${saved} 筆`; btn.style.display = 'block'; setTimeout(() => btn.style.display = 'none', 3000); }
-  loadOrders();
-}
-
-function renderShipping() {
-  const groups = groupByNickname();
-  const names = Object.keys(groups);
-  document.getElementById('shipping-count').textContent = names.length ? `共 ${names.length} 位客人` : '';
-
-  // Update customer select
-  const sel = document.getElementById('shipping-customer-select');
-  const current = sel ? sel.value : '';
-  if (sel) {
-    sel.innerHTML = '<option value="">-- 選擇客人 --</option>' +
-      '<option value="__ALL__" ' + (current==='__ALL__'?'selected':'') + '>📋 顯示全部商品（按時間排序）</option>' +
-      names.map(n => `<option value="${esc(n)}" ${n===current?'selected':''}>${esc(n)}</option>`).join('');
-  }
-
-  // Update trip revenue select
-  const allTrips = [...new Set((window._allOrders||[]).map(o => o.trip || 'CC六月連線/選物訂單'))];
-  const tripSel = document.getElementById('trip-revenue-select');
-  if (tripSel) {
-    tripSel.innerHTML = '<option value="">-- 選擇團次 --</option>' +
-      allTrips.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
-  }
-
-  renderShippingForCustomer();
-}
-
-function renderShippingForCustomer() {
-  const sel = document.getElementById('shipping-customer-select');
-  const selected = sel ? sel.value : '';
-
-  document.getElementById('shipping-empty').style.display = !selected ? 'block' : 'none';
-  if (!selected) {
-    document.getElementById('shipping-cards').innerHTML = '';
-    return;
-  }
-
-  const groups = groupByNickname();
-  const names = [selected];
-  document.getElementById('shipping-cards').innerHTML = names.map(name => {
-    const items = groups[name];
-    const firstOrder = items[0];
-    const pd = getPickingData(name);
-    const total = calcGroupTotal(name, items);
-    const itemsTwd = items.reduce((s, o) => s + calcItemTwd(name, o.id) * (parseInt(o.quantity)||1), 0);
-    return `<div class="shipping-card" data-name="${esc(name)}">
-      <div class="shipping-card-header">
-        <div style="display:flex;align-items:center;gap:10px">
-          <label style="display:flex;align-items:center;gap:10px;cursor:pointer">
-            <input type="checkbox" class="ship-check" data-name="${esc(name)}"
-              style="width:20px;height:20px;cursor:pointer;accent-color:#E8A87C">
-            <div class="avatar">${esc(name.charAt(0).toUpperCase())}</div>
-            <div>
-              <span class="shipping-name">${esc(name)}</span>
-              <div style="margin-top:2px">
-                <span class="order-no-tag" style="background:#2A2A4E;color:#A0A0C8" id="ship-no-${CSS.escape(name)}">${shipOrderNo(name, items)}</span>
-                <span style="color:#A0A0B8;font-size:11px;margin-left:6px">${formatDate(firstOrder?.created_at)}</span>
-              </div>
-            </div>
-          </label>
-        </div>
-        <span style="color:#E8A87C;font-size:12px;font-weight:600">${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</span>
-      </div>
-
-      ${items.map((o, i) => `<div class="shipping-item" style="background:${i%2===0?'#fff':'#FAFAF8'}">
-        ${o.image_url ? `<img class="shipping-img" src="${esc(o.image_url)}">` : '<div class="shipping-no-img">無圖</div>'}
-        <div class="shipping-info">
-          <div class="shipping-item-name">${esc(o.item)}</div>
-          <div class="shipping-meta">
-            ${o.size ? `<span>尺寸：<b>${esc(o.size)}</b></span>` : ''}
-            ${o.vendor ? `<span>商品來源：<b>${esc(o.vendor)}</b></span>` : ''}
-          </div>
-          <div style="margin-top:5px;display:flex;gap:12px;font-size:12px;flex-wrap:wrap">
-            ${o.price_jpy > 0 ? `<span style="color:#6B6B80">日幣：<b style="color:#1A1A2E">¥${Number(o.price_jpy).toLocaleString()}</b></span>` : ''}
-            ${(() => {
-              const pd = getItemPickingData(name, o.id);
-              const twd = (pd.price_twd && parseFloat(pd.price_twd) > 0) ? parseFloat(pd.price_twd) :
-                          (o.price_twd && o.price_twd > 0) ? o.price_twd :
-                          (o.price_jpy && o.rate) ? o.price_jpy * o.rate : 0;
-              return twd > 0 ? `<span style="color:#6B6B80">台幣：<b style="color:#E8A87C">NT$${Math.round(twd).toLocaleString()}</b></span>` : '';
-            })()}
-          </div>
-          ${(() => { const pd = getItemPickingData(name, o.id); const s = getStatusOptP1(pd.status); return `<span style="display:inline-block;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color};margin-top:4px">${s.label}</span>`; })()}
-        </div>
-        <div class="shipping-qty">
-          <div style="font-size:10px;margin-bottom:2px">數量</div>
-          <div style="font-weight:700;font-size:20px">${o.quantity||1}</div>
-        </div>
-      </div>`).join('')}
-
-      <div class="shipping-footer">
-        ${itemsTwd > 0 ? `<div class="shipping-footer-row"><span>商品台幣合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>` : ''}
-        ${Number(pd.shipping) > 0 ? `<div class="shipping-footer-row"><span>運費</span><span>NT$${Number(pd.shipping).toLocaleString()}</span></div>` : ''}
-        ${Number(pd.extra) > 0 ? `<div class="shipping-footer-row"><span>其他加價</span><span>NT$${Number(pd.extra).toLocaleString()}</span></div>` : ''}
-        ${Number(pd.discount) > 0 ? `<div class="shipping-footer-row"><span>優惠折扣</span><span style="color:#2E7D32">-NT$${Number(pd.discount).toLocaleString()}</span></div>` : ''}
-        ${pd.note ? `<div class="shipping-footer-row"><span>備註</span><span>${esc(pd.note)}</span></div>` : ''}
-        <div class="shipping-footer-total">
-          <span>應付總金額</span>
-          <span style="color:#E8A87C">${total > 0 ? `NT$${Math.round(total).toLocaleString()}` : '待確認'}</span>
-        </div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function printShippingForCustomer() {
-  const sel = document.getElementById('shipping-customer-select');
-  if (!sel?.value) { alert('請先選擇客人！'); return; }
-  window.print();
-}
-
-function showTripRevenue() {
-  const trip = document.getElementById('trip-revenue-select').value;
-  if (!trip) { alert('請先選擇團次！'); return; }
-  const pwd = prompt('請輸入密碼：');
-  if (pwd !== '888') { alert('密碼錯誤！'); return; }
-  const allO = window._allOrders || [];
-  const tripOrders = allO.filter(o => (o.trip || 'CC六月連線/選物訂單') === trip);
-  const total = tripOrders.reduce((s, o) => {
-    if (!statusCountsToTotal(o.status || 'pending')) return s;
-    const pd = getPickingData(o.nickname);
-    const itemPd = getItemPickingData(o.nickname, o.id);
-    const twd = (itemPd.price_twd && parseFloat(itemPd.price_twd) > 0) ? parseFloat(itemPd.price_twd) :
-                (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
-    return s + twd * (parseInt(o.quantity)||1);
-  }, 0);
-  // Add shipping/extra/discount per customer group
-  const groups = {};
-  tripOrders.forEach(o => {
-    if (!groups[o.nickname]) groups[o.nickname] = o;
-  });
-  const adjustments = Object.values(groups).reduce((s, o) => {
-    const pd = getPickingData(o.nickname);
-    return s + Number(pd.shipping||0) + Number(pd.extra||0) - Number(pd.discount||0);
-  }, 0);
-  const grandTotal = total + adjustments;
-  document.getElementById('trip-revenue-result').style.display = 'block';
-  document.getElementById('trip-revenue-label').textContent = `${trip} 總售出金額（不含斷貨）`;
-  document.getElementById('trip-revenue-amount').textContent = `NT$${Math.round(grandTotal).toLocaleString()}`;
-}
-
-function printShipping() {
-  const checked = [...document.querySelectorAll('.ship-check:checked')].map(cb => cb.dataset.name);
-  if (!checked.length) { alert('請先勾選要列印的客人！'); return; }
-  document.querySelectorAll('.shipping-card').forEach(card => {
-    card.style.display = checked.includes(card.dataset.name) ? 'block' : 'none';
-  });
-  window.print();
-  document.querySelectorAll('.shipping-card').forEach(card => card.style.display = '');
-}
-
-function downloadCSV() {
-  const header = '訂單編號,日期,暱稱,商品,尺寸,數量,廠商';
-  const rows = orders.map(o => [o.order_no, formatDate(o.created_at), o.nickname, o.item, o.size, o.quantity, o.vendor]
-    .map(v => `"${(v||'').replace(/"/g,'""')}"`).join(','));
-  const csv = '\uFEFF' + [header, ...rows].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = '代購訂單.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function switchTab(tab) {
-  ['orders','picking','shipping','customer'].forEach(t => {
-    document.getElementById(t+'-tab').style.display = t === tab ? 'block' : 'none';
-  });
-  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-    btn.classList.toggle('active', ['orders','picking','shipping','customer'][i] === tab);
-  });
-  if (tab === 'shipping') renderShipping();
-  if (tab === 'customer') renderCustomerSelect();
-}
-
-function renderCustomerSelect() {
-  // Use ALL orders (not filtered by trip) for customer query
-  const allO = window._allOrders || [];
-  const nameMap = {};
-  allO.forEach(o => {
-    const key = o.nickname.toLowerCase();
-    if (!nameMap[key]) nameMap[key] = o.nickname;
-  });
-  const names = Object.values(nameMap).sort();
-  const sel = document.getElementById('customer-select');
-  const current = sel.value;
-  sel.innerHTML = '<option value="">-- 選擇客人 --</option>' +
-    names.map(n => `<option value="${esc(n)}" ${n.toLowerCase()===current.toLowerCase()?'selected':''}>${esc(n)}</option>`).join('');
-  if (current) showCustomerOrders();
-}
-
-function showCustomerOrders() {
-  const name = document.getElementById('customer-select').value;
-  const container = document.getElementById('customer-orders');
+function showOrders() {
+  const name = document.getElementById('name-select').value;
+  const container = document.getElementById('result');
   if (!name) { container.innerHTML = ''; return; }
 
-  // Get ALL orders for this customer (case-insensitive)
-  const allO = window._allOrders || [];
-  const customerOrders = allO.filter(o => o.nickname.toLowerCase() === name.toLowerCase()).sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+  const items = groups[name] || [];
 
   // Group by trip
   const tripMap = {};
-  customerOrders.forEach(o => {
+  items.forEach(o => {
     const trip = o.trip || 'CC選物代購';
     if (!tripMap[trip]) tripMap[trip] = [];
     tripMap[trip].push(o);
   });
 
   const tripNames = Object.keys(tripMap);
+  const COUNT_STATUSES = ['success', 'preparing', 'done'];
   const grandTotal = tripNames.reduce((s, trip) => {
-    const items = tripMap[trip];
-    const twd = items.reduce((ts, o) => {
-      const d = getItemPickingData(name, o.id);
-      if (d.status === 'outofstock' || o.status === 'outofstock') return ts;
-      return ts + calcItemTwd(name, o.id) * (parseInt(o.quantity)||1);
+    const tripItems = tripMap[trip];
+    const twd = tripItems.reduce((ts, o) => {
+      if (!COUNT_STATUSES.includes(o.status || 'pending')) return ts;
+      const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+      return ts + price * (parseInt(o.quantity)||1);
     }, 0);
-    const pd = getPickingData(name);
-    return s + twd + Number(pd.shipping||0) + Number(pd.extra||0) - Number(pd.discount||0);
+    const shipping = tripItems[0]?.shipping || 0;
+    const extra = tripItems[0]?.extra || 0;
+    const discount = tripItems[0]?.discount || 0;
+    return s + twd + Number(shipping) + Number(extra) - Number(discount);
   }, 0);
 
   container.innerHTML = `
-    <div style="background:#1A1A2E;border-radius:12px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
+    <div class="customer-header">
       <div>
         <div style="color:#fff;font-weight:700;font-size:17px">${esc(name)}</div>
-        <div style="color:#A0A0B8;font-size:12px;margin-top:3px">共 ${tripNames.length} 個團次・${customerOrders.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</div>
+        <div style="color:#A0A0B8;font-size:12px;margin-top:2px">共 ${tripNames.length} 個團次・${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件商品</div>
       </div>
-      <div style="color:#E8A87C;font-weight:700;font-size:16px">${grandTotal > 0 ? `NT$${Math.round(grandTotal).toLocaleString()}` : '待確認'}</div>
+      ${grandTotal > 0 ? `<div style="color:#E8A87C;font-weight:700;font-size:16px">NT$${Math.round(grandTotal).toLocaleString()}</div>` : ''}
     </div>
 
     ${tripNames.map(trip => {
-      const items = tripMap[trip];
-      const pd = getPickingData(name);
-      const itemsTwd = items.reduce((s, o) => {
-        const d = getItemPickingData(name, o.id);
-        if (d.status === 'outofstock' || o.status === 'outofstock') return s;
-        return s + calcItemTwd(name, o.id) * (parseInt(o.quantity)||1);
+      const tripItems = tripMap[trip];
+      const shipping = Number(tripItems[0]?.shipping||0);
+      const extra = Number(tripItems[0]?.extra||0);
+      const discount = Number(tripItems[0]?.discount||0);
+      const note = tripItems[0]?.note||'';
+      const COUNT_STATUSES = ['success', 'preparing', 'done'];
+      const itemsTwd = tripItems.reduce((s, o) => {
+        if (!COUNT_STATUSES.includes(o.status || 'pending')) return s;
+        const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+        return s + price * (parseInt(o.quantity)||1);
       }, 0);
-      const total = itemsTwd + Number(pd.shipping||0) + Number(pd.extra||0) - Number(pd.discount||0);
+      const total = itemsTwd + shipping + extra - discount;
 
       return `
-        <div style="background:#2A2A4E;border-radius:10px 10px 0 0;padding:10px 16px;margin-top:8px">
-          <span style="color:#E8A87C;font-weight:700;font-size:13px">🏷 ${esc(trip)}</span>
-          <span style="color:#A0A0B8;font-size:12px;margin-left:10px">${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</span>
+        <div style="background:#1A1A2E;border-radius:10px 10px 0 0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <span style="color:#E8A87C;font-weight:700;font-size:14px">🏷 ${esc(trip)}</span>
+          <span style="color:#fff;font-size:12px">${tripItems.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</span>
         </div>
-        <div style="background:#fff;border-radius:0 0 12px 12px;padding:12px 16px;border:1px solid #E8E4DF;border-top:none;display:flex;flex-direction:column;gap:10px">
-          ${items.map(o => {
-            const d = getItemPickingData(name, o.id);
-            const s = getStatusOptP1(d.status || o.status || 'pending');
-            const twd = calcItemTwd(name, o.id);
-            const isOut = d.status === 'outofstock' || o.status === 'outofstock';
-            return `<div style="display:flex;gap:12px;align-items:center;padding-bottom:10px;border-bottom:1px solid #F0EDEA">
-              ${o.image_url ? `<img src="${esc(o.image_url)}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0">` : '<div style="width:64px;height:64px;background:#F0EDEA;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;color:#CCC;flex-shrink:0">無圖</div>'}
+        <div class="card" style="padding:16px;border-radius:0 0 12px 12px;margin-top:0;border-top:none">
+          ${tripItems.map(o => {
+            const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+            const twdTotal = COUNT_STATUSES.includes(o.status||'pending') ? twd * (parseInt(o.quantity)||1) : 0;
+            return `<div class="order-item">
+              ${o.image_url ? `<img src="${esc(o.image_url)}" class="thumb">` : '<div class="no-thumb">無圖</div>'}
               <div style="flex:1">
-                <div style="font-weight:700;color:${isOut?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:3px">${esc(o.item)}${isOut?' （斷貨）':''}</div>
-                <div style="font-size:12px;color:#6B6B80">${o.size?esc(o.size)+'　':''}數量：${o.quantity||1}${o.vendor?`　廠商：${esc(o.vendor)}`:''}</div>
-                <span style="display:inline-block;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600;background:${s.bg};color:${s.color};margin-top:3px">${s.label}</span>
+                <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:4px">
+                  ${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}
+                </div>
+                <div style="font-size:12px;color:#6B6B80">${o.size?esc(o.size)+'　':''}數量：${o.quantity||1}</div>
+                <span class="status-badge" style="background:${STATUS_BG[o.status]||'#F0F0F8'};color:${STATUS_COLOR[o.status]||'#A0A0B8'};margin-top:4px">
+                  ${STATUS_LABEL[o.status]||'處理中'}
+                </span>
               </div>
               <div style="text-align:right;flex-shrink:0">
-                ${isOut ? '<div style="color:#D64045;font-size:12px;font-weight:600">不計費</div>' : twd > 0 ? `<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twd*(parseInt(o.quantity)||1)).toLocaleString()}</div>` : ''}
+                ${!COUNT_STATUSES.includes(o.status||'pending')
+                  ? '<div style="color:#A0A0B8;font-size:12px">不計費</div>'
+                  : twdTotal > 0 ? `<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>` : ''
+                }
               </div>
             </div>`;
           }).join('')}
-          ${total > 0 ? `<div style="background:#FEF9F4;border-radius:8px;padding:12px;border:1px solid #E8A87C">
-            ${itemsTwd>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
-            ${Number(pd.shipping)>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>運費</span><span>NT$${Number(pd.shipping).toLocaleString()}</span></div>`:''}
-            ${Number(pd.extra)>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>其他加價</span><span>NT$${Number(pd.extra).toLocaleString()}</span></div>`:''}
-            ${Number(pd.discount)>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#2E7D32;margin-bottom:4px"><span>優惠折扣</span><span>-NT$${Number(pd.discount).toLocaleString()}</span></div>`:''}
-            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;color:#1A1A2E;border-top:1px solid #E8A87C;padding-top:8px;margin-top:4px">
-              <span>本團應付</span><span style="color:#E8A87C">NT$${Math.round(total).toLocaleString()}</span>
-            </div>
-          </div>` : '<div style="font-size:12px;color:#A0A0B8;text-align:center">金額由工作人員確認後顯示</div>'}
+          ${total > 0 ? `<div style="background:#FEF9F4;border-radius:8px;padding:12px;margin-top:10px;border:1px solid #E8A87C">
+            ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
+            ${shipping>0?`<div class="summary-row"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
+            ${extra>0?`<div class="summary-row"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
+            ${discount>0?`<div class="summary-row"><span style="color:#2E7D32">優惠折扣</span><span style="color:#2E7D32">-NT$${discount.toLocaleString()}</span></div>`:''}
+            ${note?`<div class="summary-row"><span>備註</span><span>${esc(note)}</span></div>`:''}
+            <div class="summary-total"><span>本團應付</span><span style="color:#E8A87C">NT$${Math.round(total).toLocaleString()}</span></div>
+          </div>` : `<div style="font-size:13px;color:#A0A0B8;text-align:center;margin-top:10px">金額由工作人員確認後顯示</div>`}
         </div>`;
     }).join('')}
   `;
@@ -1245,13 +198,10 @@ function showCustomerOrders() {
 
 function esc(str) {
   if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 loadOrders();
-sb.channel('orders-changes')
-  .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadOrders())
-  .subscribe();
 </script>
 </body>
 </html>
