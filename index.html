@@ -118,10 +118,11 @@ function showOrders() {
   });
 
   const tripNames = Object.keys(tripMap);
+  const COUNT_STATUSES = ['success', 'preparing', 'done'];
   const grandTotal = tripNames.reduce((s, trip) => {
     const tripItems = tripMap[trip];
     const twd = tripItems.reduce((ts, o) => {
-      if (o.status === 'outofstock') return ts;
+      if (!COUNT_STATUSES.includes(o.status || 'pending')) return ts;
       const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
       return ts + price * (parseInt(o.quantity)||1);
     }, 0);
@@ -146,8 +147,9 @@ function showOrders() {
       const extra = Number(tripItems[0]?.extra||0);
       const discount = Number(tripItems[0]?.discount||0);
       const note = tripItems[0]?.note||'';
+      const COUNT_STATUSES = ['success', 'preparing', 'done'];
       const itemsTwd = tripItems.reduce((s, o) => {
-        if (o.status === 'outofstock') return s;
+        if (!COUNT_STATUSES.includes(o.status || 'pending')) return s;
         const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
         return s + price * (parseInt(o.quantity)||1);
       }, 0);
@@ -161,7 +163,7 @@ function showOrders() {
         <div class="card" style="padding:16px;border-radius:0 0 12px 12px;margin-top:0;border-top:none">
           ${tripItems.map(o => {
             const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
-            const twdTotal = o.status === 'outofstock' ? 0 : twd * (parseInt(o.quantity)||1);
+            const twdTotal = COUNT_STATUSES.includes(o.status||'pending') ? twd * (parseInt(o.quantity)||1) : 0;
             return `<div class="order-item">
               ${o.image_url ? `<img src="${esc(o.image_url)}" class="thumb">` : '<div class="no-thumb">無圖</div>'}
               <div style="flex:1">
@@ -174,8 +176,8 @@ function showOrders() {
                 </span>
               </div>
               <div style="text-align:right;flex-shrink:0">
-                ${o.status==='outofstock'
-                  ? '<div style="color:#D64045;font-size:13px;font-weight:600">不計費</div>'
+                ${!COUNT_STATUSES.includes(o.status||'pending')
+                  ? '<div style="color:#A0A0B8;font-size:12px">不計費</div>'
                   : twdTotal > 0 ? `<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>` : ''
                 }
               </div>
