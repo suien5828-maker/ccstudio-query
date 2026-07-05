@@ -59,9 +59,10 @@ const SUPABASE_URL = 'https://zwabpiysvlqvqunauwyj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3YWJwaXlzdmxxdnF1bmF1d3lqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIxMTA1MzgsImV4cCI6MjA5NzY4NjUzOH0.-jx1ikazqqKRta-8lEoifeKR9bVVm_E00m4e17q_6z8';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const STATUS_LABEL = { pending:'處理中', success:'採購成功', outofstock:'斷貨', preparing:'出貨準備中', done:'已完成' };
-const STATUS_COLOR = { pending:'#A0A0B8', success:'#2E7D32', outofstock:'#D64045', preparing:'#E65100', done:'#1565C0' };
-const STATUS_BG = { pending:'#F0F0F8', success:'#E8F5E9', outofstock:'#FFEBEE', preparing:'#FFF3E0', done:'#E3F2FD' };
+const STATUS_LABEL = { pending:'處理中', success:'採購成功', outofstock:'斷貨' };
+const STATUS_COLOR = { pending:'#A0A0B8', success:'#2E7D32', outofstock:'#D64045' };
+const STATUS_BG = { pending:'#F0F0F8', success:'#E8F5E9', outofstock:'#FFEBEE' };
+const COUNT_STATUSES = ['success'];
 
 let allOrders = [];
 let groups = {};
@@ -118,7 +119,7 @@ function showOrders() {
   });
 
   const tripNames = Object.keys(tripMap);
-  const COUNT_STATUSES = ['success', 'preparing', 'done'];
+  
   const grandTotal = tripNames.reduce((s, trip) => {
     const tripItems = tripMap[trip];
     const twd = tripItems.reduce((ts, o) => {
@@ -147,7 +148,7 @@ function showOrders() {
       const extra = Number(tripItems[0]?.extra||0);
       const discount = Number(tripItems[0]?.discount||0);
       const note = tripItems[0]?.note||'';
-      const COUNT_STATUSES = ['success', 'preparing', 'done'];
+      
       const itemsTwd = tripItems.reduce((s, o) => {
         if (!COUNT_STATUSES.includes(o.status || 'pending')) return s;
         const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
@@ -185,7 +186,12 @@ function showOrders() {
             </div>`;
           }).join('')}
           ${total > 0 ? `<div style="background:#FEF9F4;border-radius:8px;padding:12px;margin-top:10px;border:1px solid #E8A87C">
-            ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
+            ${(() => {
+        const successQty = tripItems.filter(o => o.status === 'success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
+        const totalQty = tripItems.reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
+        return successQty > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;padding:8px 10px;background:#E8F5E9;border-radius:8px;color:#2E7D32"><span>✓ 採購成功數量</span><span style="font-weight:700">${successQty} / ${totalQty} 件</span></div>` : '';
+      })()}
+      ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
             ${shipping>0?`<div class="summary-row"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
             ${extra>0?`<div class="summary-row"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
             ${discount>0?`<div class="summary-row"><span style="color:#2E7D32">優惠折扣</span><span style="color:#2E7D32">-NT$${discount.toLocaleString()}</span></div>`:''}
