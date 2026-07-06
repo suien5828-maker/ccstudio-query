@@ -112,99 +112,133 @@ function showOrders() {
   if (!name) { container.innerHTML = ''; return; }
 
   const items = groups[name] || [];
-
-  // Group by trip
   const tripMap = {};
   items.forEach(o => {
-    const trip = o.trip || 'CC選物代購';
-    if (!tripMap[trip]) tripMap[trip] = [];
-    tripMap[trip].push(o);
+    const t = o.trip || 'CC選物代購';
+    if (!tripMap[t]) tripMap[t] = [];
+    tripMap[t].push(o);
   });
 
   const tripNames = Object.keys(tripMap);
-  
   const grandTotal = tripNames.reduce((s, trip) => {
     const tripItems = tripMap[trip];
-    const twd = tripItems.reduce((ts, o) => {
-      if (!COUNT_STATUSES.includes(o.status || 'pending')) return ts;
+    const twd = tripItems.reduce((ts,o) => {
+      if (!COUNT_STATUSES.includes(o.status||'pending')) return ts;
       const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
       return ts + price * (parseInt(o.quantity)||1);
     }, 0);
-    const shipping = tripItems[0]?.shipping || 0;
-    const extra = tripItems[0]?.extra || 0;
-    const discount = tripItems[0]?.discount || 0;
-    return s + twd + Number(shipping) + Number(extra) - Number(discount);
+    const sh = Number(tripItems[0]?.shipping||0);
+    const ex = Number(tripItems[0]?.extra||0);
+    const dis = Number(tripItems[0]?.discount||0);
+    return s + twd + sh + ex - dis;
   }, 0);
 
-  container.innerHTML = `
+  let html = `
     <div class="customer-header">
       <div>
         <div style="color:#fff;font-weight:700;font-size:17px">${esc(name)}</div>
         <div style="color:#A0A0B8;font-size:12px;margin-top:2px">共 ${tripNames.length} 個團次・${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件商品</div>
       </div>
       ${grandTotal > 0 ? `<div style="color:#E8A87C;font-weight:700;font-size:16px">NT$${Math.round(grandTotal).toLocaleString()}</div>` : ''}
-    </div>
+    </div>`;
 
-    ${tripNames.map(trip => {
-      const tripItems = tripMap[trip];
-      const shipping = Number(tripItems[0]?.shipping||0);
-      const extra = Number(tripItems[0]?.extra||0);
-      const discount = Number(tripItems[0]?.discount||0);
-      const note = tripItems[0]?.note||'';
-      
-      const itemsTwd = tripItems.reduce((s, o) => {
-        if (!COUNT_STATUSES.includes(o.status || 'pending')) return s;
-        const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
-        return s + price * (parseInt(o.quantity)||1);
-      }, 0);
-      const total = itemsTwd + shipping + extra - discount;
+  tripNames.forEach((trip, idx) => {
+    const tripItems = tripMap[trip];
+    const sorted = [...tripItems].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
+    const shipping = Number(sorted[0]?.shipping||0);
+    const extra = Number(sorted[0]?.extra||0);
+    const discount = Number(sorted[0]?.discount||0);
+    const note = sorted[0]?.note||'';
+    const itemsTwd = sorted.reduce((s,o) => {
+      if (!COUNT_STATUSES.includes(o.status||'pending')) return s;
+      const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+      return s + price * (parseInt(o.quantity)||1);
+    }, 0);
+    const total = itemsTwd + shipping + extra - discount;
 
-      return `
-        <div style="background:#1A1A2E;border-radius:10px 10px 0 0;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-          <span style="color:#E8A87C;font-weight:700;font-size:14px">🏷 ${esc(trip)}</span>
-          <span style="color:#fff;font-size:12px">${tripItems.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</span>
+    // Payment info
+    const pmForTrip = (window._allPayments||[]).filter(p =>
+      p.nickname.toLowerCase()===name.toLowerCase() && p.trip===trip
+    );
+    const orderNo = pmForTrip.length > 0 ? (pmForTrip[0].order_no||'') : '';
+    const paidTotal = Math.round(pmForTrip.reduce((s,p)=>s+Number(p.amount),0));
+    const isPaid = paidTotal >= Math.round(total) && total > 0;
+
+    // Success count
+    const successQty = sorted.filter(o=>o.status==='success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
+    const totalQty = sorted.reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
+
+    const tripId = `trip-${idx}`;
+
+    html += `
+      <div style="margin-top:8px">
+        <div onclick="toggleTrip('${tripId}')" style="background:#1A1A2E;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+          <div>
+            <span style="color:#E8A87C;font-weight:700;font-size:14px">🏷 ${esc(trip)}</span>
+            ${orderNo?`<span style="background:#2A2A4E;color:#A0A0C8;border-radius:4px;padding:1px 8px;font-size:10px;margin-left:8px">${esc(orderNo)}</span>`:''}
+            ${isPaid?`<span style="background:#2E7D32;color:#fff;border-radius:4px;padding:1px 8px;font-size:10px;margin-left:4px">✓ 已付款</span>`:''}
+          </div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="color:#A0A0B8;font-size:12px">${totalQty} 件</span>
+            <span id="arrow-${tripId}" style="color:#E8A87C;font-size:14px">▼</span>
+          </div>
         </div>
-        <div class="card" style="padding:16px;border-radius:0 0 12px 12px;margin-top:0;border-top:none">
-          ${tripItems.map(o => {
-            const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
-            const twdTotal = COUNT_STATUSES.includes(o.status||'pending') ? twd * (parseInt(o.quantity)||1) : 0;
-            return `<div class="order-item">
-              ${o.image_url ? `<img src="${esc(o.image_url)}" class="thumb">` : '<div class="no-thumb">無圖</div>'}
-              <div style="flex:1">
-                <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:4px">
-                  ${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}
+
+        <div id="${tripId}" style="display:none">
+          <div class="card" style="border-radius:0 0 12px 12px;border-top:none;padding:12px 16px">
+            ${successQty > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;padding:7px 10px;background:#E8F5E9;border-radius:8px;color:#2E7D32"><span>✓ 採購成功數量</span><span style="font-weight:700">${successQty} / ${totalQty} 件</span></div>` : ''}
+
+            ${sorted.map((o,i) => {
+              const s = STATUS_LABEL[o.status||'pending']||'處理中';
+              const sc = STATUS_COLOR[o.status||'pending']||'#A0A0B8';
+              const sb2 = STATUS_BG[o.status||'pending']||'#F0F0F8';
+              const twd = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
+              const twdTotal = COUNT_STATUSES.includes(o.status||'pending') ? twd * (parseInt(o.quantity)||1) : 0;
+              return `<div class="order-item" style="background:${i%2?'#FAFAF8':'#fff'}">
+                ${o.image_url?`<img src="${esc(o.image_url)}" class="thumb">`:'<div class="no-thumb">無圖</div>'}
+                <div style="flex:1">
+                  <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:3px">${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}</div>
+                  <div style="font-size:12px;color:#6B6B80">尺寸/規格：${esc(o.size)||'-'}　數量：${o.quantity||1}</div>
+                  ${o.price_jpy>0?`<div style="font-size:12px;color:#6B6B80;margin-top:2px">日幣原價：¥${Number(o.price_jpy).toLocaleString()}</div>`:''}
+                  <div style="margin-top:4px"><span class="status-badge" style="background:${sb2};color:${sc}">${s}</span></div>
                 </div>
-                <div style="font-size:12px;color:#6B6B80">尺寸/規格：${o.size?esc(o.size):'-'}　數量：${o.quantity||1}</div>
-                ${o.price_jpy > 0 ? `<div style="font-size:12px;color:#6B6B80;margin-top:2px">日幣原價：¥${Number(o.price_jpy).toLocaleString()}</div>` : ''}
-                <span class="status-badge" style="background:${STATUS_BG[o.status]||'#F0F0F8'};color:${STATUS_COLOR[o.status]||'#A0A0B8'};margin-top:4px">
-                  ${STATUS_LABEL[o.status]||'處理中'}
-                </span>
-              </div>
-              <div style="text-align:right;flex-shrink:0">
-                ${!COUNT_STATUSES.includes(o.status||'pending')
-                  ? '<div style="color:#A0A0B8;font-size:12px">不計費</div>'
-                  : twdTotal > 0 ? `<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>` : ''
-                }
-              </div>
-            </div>`;
-          }).join('')}
-          ${total > 0 ? `<div style="background:#FEF9F4;border-radius:8px;padding:12px;margin-top:10px;border:1px solid #E8A87C">
-            ${(() => {
-        const successQty = tripItems.filter(o => o.status === 'success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-        const totalQty = tripItems.reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-        return successQty > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;padding:8px 10px;background:#E8F5E9;border-radius:8px;color:#2E7D32"><span>✓ 採購成功數量</span><span style="font-weight:700">${successQty} / ${totalQty} 件</span></div>` : '';
-      })()}
-      ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
-            ${shipping>0?`<div class="summary-row"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
-            ${extra>0?`<div class="summary-row"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
-            ${discount>0?`<div class="summary-row"><span style="color:#2E7D32">優惠折扣</span><span style="color:#2E7D32">-NT$${discount.toLocaleString()}</span></div>`:''}
-            ${note?`<div class="summary-row"><span>備註</span><span>${esc(note)}</span></div>`:''}
-            <div class="summary-total"><span>本團應付</span><span style="color:#E8A87C">NT$${Math.round(total).toLocaleString()}</span></div>
-          </div>` : `<div style="font-size:13px;color:#A0A0B8;text-align:center;margin-top:10px">金額由工作人員確認後顯示</div>`}
-        </div>`;
-    }).join('')}
-  `;
+                <div style="text-align:right;flex-shrink:0">
+                  ${o.status==='outofstock'?'<div style="color:#D64045;font-size:12px">不計費</div>':
+                    twdTotal>0?`<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>`:''}
+                </div>
+              </div>`;
+            }).join('')}
+
+            <div style="background:#FEF9F4;border-radius:8px;padding:12px;margin-top:10px;border:1px solid #E8A87C">
+              ${itemsTwd>0?`<div class="summary-row"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
+              ${shipping>0?`<div class="summary-row"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
+              ${extra>0?`<div class="summary-row"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
+              ${discount>0?`<div class="summary-row"><span style="color:#2E7D32">優惠折扣</span><span style="color:#2E7D32">-NT$${discount.toLocaleString()}</span></div>`:''}
+              ${note?`<div class="summary-row"><span>備註</span><span>${esc(note)}</span></div>`:''}
+              <div class="summary-total"><span>本團應付</span><span style="color:#E8A87C">${total>0?'NT$'+Math.round(total).toLocaleString():'待確認'}</span></div>
+              ${isPaid?`
+              <div style="border-top:1px solid #E8A87C;margin-top:8px;padding-top:8px">
+                ${pmForTrip.map(p=>`<div class="summary-row"><span style="color:#2E7D32">${esc(p.method)}${p.note?' ・'+esc(p.note):''}</span><span style="color:#2E7D32;font-weight:600">NT$${Number(p.amount).toLocaleString()}</span></div>`).join('')}
+                <div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;color:#2E7D32;margin-top:4px"><span>✓ 已付款</span><span>NT$${paidTotal.toLocaleString()}</span></div>
+              </div>`:''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  });
+
+  container.innerHTML = html;
 }
+
+function toggleTrip(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById('arrow-'+id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
+}
+
 
 function esc(str) {
   if (!str) return '';
