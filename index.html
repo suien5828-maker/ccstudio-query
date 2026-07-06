@@ -70,6 +70,9 @@ let groups = {};
 async function loadOrders() {
   const { data } = await sb.from('orders').select('*').order('created_at', { ascending: false });
   allOrders = data || [];
+  // Load payments for order_no lookup
+  const { data: pmData } = await sb.from('payments').select('*');
+  window._allPayments = pmData || [];
 
   // Find latest trip
   const trips = [...new Set(allOrders.map(o => o.trip || '第1團'))];
