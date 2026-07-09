@@ -45,14 +45,14 @@ select:focus, input:focus { border-color: #E8A87C; }
 <div class="main">
   <div class="card">
     <div class="card-title">查詢我的訂單</div>
-    <label style="margin-bottom:6px">選擇團次</label>
-    <select id="trip-select" onchange="onTripSelect()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit;margin-bottom:12px">
-      <option value="">-- 選擇團次 --</option>
+    <label style="margin-bottom:6px">選擇你的暱稱</label>
+    <select id="name-select" onchange="onNameSelect()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit;margin-bottom:12px">
+      <option value="">-- 選擇你的暱稱 --</option>
     </select>
-    <div id="name-select-wrap" style="display:none">
-      <label style="margin-bottom:6px">選擇你的暱稱</label>
-      <select id="name-select" onchange="showOrders()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-        <option value="">-- 選擇你的暱稱 --</option>
+    <div id="trip-select-wrap" style="display:none">
+      <label style="margin-bottom:6px">選擇團次</label>
+      <select id="trip-select" onchange="showOrders()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
+        <option value="">-- 所有團次 --</option>
       </select>
     </div>
   </div>
@@ -80,30 +80,9 @@ async function loadOrders() {
   const { data: pmData } = await sb.from('payments').select('*');
   window._allPayments = pmData || [];
 
-  // Populate trip select
-  const allTrips = [...new Set(allOrders.map(o => o.trip).filter(Boolean))];
-  allTrips.sort((a,b) => {
-    const na = parseInt(a.replace(/[^0-9]/g,''))||0;
-    const nb = parseInt(b.replace(/[^0-9]/g,''))||0;
-    return nb - na;
-  });
-  const tripSel = document.getElementById('trip-select');
-  if (tripSel) {
-    tripSel.innerHTML = '<option value="">-- 選擇團次 --</option>' +
-      allTrips.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
-  }
-}
-
-function onTripSelect() {
-  const trip = document.getElementById('trip-select').value;
-  const wrap = document.getElementById('name-select-wrap');
-  const result = document.getElementById('result');
-  if (!trip) { wrap.style.display = 'none'; result.innerHTML = ''; return; }
-
-  // Filter orders by trip
-  const tripOrders = allOrders.filter(o => (o.trip||'') === trip);
+  // Group by nickname for name select
   const keyMap = {}, displayMap = {};
-  tripOrders.forEach(o => {
+  allOrders.forEach(o => {
     const k = o.nickname.toLowerCase();
     if (!keyMap[k]) { keyMap[k] = []; displayMap[k] = o.nickname; }
     keyMap[k].push(o);
@@ -112,20 +91,44 @@ function onTripSelect() {
   Object.keys(keyMap).forEach(k => { groups[displayMap[k]] = keyMap[k]; });
 
   const names = Object.keys(groups).sort();
-  const sel = document.getElementById('name-select');
-  sel.innerHTML = '<option value="">-- 選擇你的暱稱 --</option>' +
-    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
-  sel.value = '';
-  wrap.style.display = 'block';
-  result.innerHTML = '';
+  const nameSel = document.getElementById('name-select');
+  if (nameSel) {
+    nameSel.innerHTML = '<option value="">-- 選擇你的暱稱 --</option>' +
+      names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  }
+}
+
+function onNameSelect() {
+  const name = document.getElementById('name-select').value;
+  const wrap = document.getElementById('trip-select-wrap');
+  const result = document.getElementById('result');
+  if (!name) { wrap.style.display = 'none'; result.innerHTML = ''; return; }
+
+  // Get all trips for this customer
+  const customerOrders = allOrders.filter(o => o.nickname.toLowerCase() === name.toLowerCase());
+  const allTrips = [...new Set(customerOrders.map(o => o.trip).filter(Boolean))];
+  allTrips.sort((a,b) => {
+    const na = parseInt(a.replace(/[^0-9]/g,''))||0;
+    const nb = parseInt(b.replace(/[^0-9]/g,''))||0;
+    return nb - na;
+  });
+
+  const tripSel = document.getElementById('trip-select');
+  tripSel.innerHTML = '<option value="">-- 所有團次 --</option>' +
+    allTrips.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  tripSel.value = '';
+  wrap.style.display = allTrips.length > 1 ? 'block' : 'none';
+  showOrders();
 }
 
 function showOrders() {
   const name = document.getElementById('name-select').value;
+  const trip = document.getElementById('trip-select')?.value || '';
   const container = document.getElementById('result');
   if (!name) { container.innerHTML = ''; return; }
 
-  const items = groups[name] || [];
+  let items = allOrders.filter(o => o.nickname.toLowerCase() === name.toLowerCase());
+  if (trip) items = items.filter(o => (o.trip||'') === trip);
   const tripMap = {};
   items.forEach(o => {
     const t = o.trip || 'CC選物代購';
