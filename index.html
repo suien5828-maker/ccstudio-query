@@ -80,36 +80,18 @@ async function loadOrders() {
   const { data: pmData } = await sb.from('payments').select('*');
   window._allPayments = pmData || [];
 
-  // Find latest trip
-  const trips = [...new Set(allOrders.map(o => o.trip || '第1團'))];
-  // Sort trips to find latest (by number)
-  trips.sort((a, b) => {
-    const na = parseInt(a.replace(/[^0-9]/g,'')) || 0;
-    const nb = parseInt(b.replace(/[^0-9]/g,'')) || 0;
+  // Populate trip select
+  const allTrips = [...new Set(allOrders.map(o => o.trip).filter(Boolean))];
+  allTrips.sort((a,b) => {
+    const na = parseInt(a.replace(/[^0-9]/g,''))||0;
+    const nb = parseInt(b.replace(/[^0-9]/g,''))||0;
     return nb - na;
   });
-  const latestTrip = trips[0] || '第1團';
-
-  // Group by nickname (case-insensitive) - show ALL orders regardless of trip
-  const keyMap = {};
-  const displayMap = {};
-  allOrders.forEach(o => {
-    const key = o.nickname.toLowerCase();
-    if (!keyMap[key]) { keyMap[key] = []; displayMap[key] = o.nickname; }
-    keyMap[key].push(o);
-  });
-  groups = {};
-  Object.keys(keyMap).forEach(k => { groups[displayMap[k]] = keyMap[k]; });
-
-  // Populate select
-  const sel = document.getElementById('name-select');
-  const names = Object.keys(groups).sort();
-  // Update subtitle
-  const subtitle = document.getElementById('trip-subtitle');
-  if (subtitle) subtitle.textContent = `目前團次：${latestTrip}`;
-
-  sel.innerHTML = `<option value="">-- 選擇你的暱稱 --</option>` +
-    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  const tripSel = document.getElementById('trip-select');
+  if (tripSel) {
+    tripSel.innerHTML = '<option value="">-- 選擇團次 --</option>' +
+      allTrips.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  }
 }
 
 function onTripSelect() {
