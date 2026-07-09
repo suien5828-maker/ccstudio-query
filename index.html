@@ -167,7 +167,6 @@ function showResult() {
 
   let html = `<div style="background:#1A1A2E;border-radius:12px;padding:14px 18px;margin-bottom:8px">
     <div style="color:#fff;font-weight:700;font-size:17px">${esc(name)}</div>
-    <div style="color:#A0A0B8;font-size:12px;margin-top:2px">共 ${tripNames.length} 個團次・${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</div>
   </div>`;
 
   tripNames.forEach((tn, idx) => {
