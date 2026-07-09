@@ -45,10 +45,16 @@ select:focus, input:focus { border-color: #E8A87C; }
 <div class="main">
   <div class="card">
     <div class="card-title">查詢我的訂單</div>
-    <label>選擇你的暱稱</label>
-    <select id="name-select" onchange="showOrders()">
-      <option value="">載入中…</option>
+    <label style="margin-bottom:6px">選擇團次</label>
+    <select id="trip-select" onchange="onTripSelect()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit;margin-bottom:12px">
+      <option value="">-- 選擇團次 --</option>
     </select>
+    <div id="name-select-wrap" style="display:none">
+      <label style="margin-bottom:6px">選擇你的暱稱</label>
+      <select id="name-select" onchange="showOrders()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:10px 12px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
+        <option value="">-- 選擇你的暱稱 --</option>
+      </select>
+    </div>
   </div>
 
   <div id="result"></div>
@@ -104,6 +110,32 @@ async function loadOrders() {
 
   sel.innerHTML = `<option value="">-- 選擇你的暱稱 --</option>` +
     names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+}
+
+function onTripSelect() {
+  const trip = document.getElementById('trip-select').value;
+  const wrap = document.getElementById('name-select-wrap');
+  const result = document.getElementById('result');
+  if (!trip) { wrap.style.display = 'none'; result.innerHTML = ''; return; }
+
+  // Filter orders by trip
+  const tripOrders = allOrders.filter(o => (o.trip||'') === trip);
+  const keyMap = {}, displayMap = {};
+  tripOrders.forEach(o => {
+    const k = o.nickname.toLowerCase();
+    if (!keyMap[k]) { keyMap[k] = []; displayMap[k] = o.nickname; }
+    keyMap[k].push(o);
+  });
+  groups = {};
+  Object.keys(keyMap).forEach(k => { groups[displayMap[k]] = keyMap[k]; });
+
+  const names = Object.keys(groups).sort();
+  const sel = document.getElementById('name-select');
+  sel.innerHTML = '<option value="">-- 選擇你的暱稱 --</option>' +
+    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+  sel.value = '';
+  wrap.style.display = 'block';
+  result.innerHTML = '';
 }
 
 function showOrders() {
