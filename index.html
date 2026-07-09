@@ -141,9 +141,7 @@ function showOrders() {
       const price = (o.price_twd && o.price_twd > 0) ? o.price_twd : (o.price_jpy * (o.rate||0));
       return ts + price * (parseInt(o.quantity)||1);
     }, 0);
-    const sh = Number(tripItems[0]?.shipping||0);
-    const ex = Number(tripItems[0]?.extra||0);
-    const dis = Number(tripItems[0]?.discount||0);
+    const { shipping: sh, extra: ex, discount: dis } = getGroupFields(tripItems);
     return s + twd + sh + ex - dis;
   }, 0);
 
