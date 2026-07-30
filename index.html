@@ -3,294 +3,51 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>CC 選物代購 - 訂單管理</title>
+<title>CC 選物代購 - 訂單查詢</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: #F5F3EF; font-family: 'PingFang TC','Noto Sans TC',sans-serif; min-height: 100vh; }
-.header { background: #1A1A2E; padding: 18px 20px; border-bottom: 3px solid #E8A87C; }
+.header { background: #1A1A2E; padding: 22px 28px; border-bottom: 3px solid #E8A87C; }
 .header-eyebrow { font-size: 10px; letter-spacing: 4px; color: #E8A87C; margin-bottom: 4px; }
-.header h1 { color: #fff; font-size: 20px; font-weight: 700; }
-.header p { color: #A0A0B8; font-size: 11px; margin-top: 2px; }
-.trip-badge { display:inline-block; background:#E8A87C; color:#1A1A2E; border-radius:6px; padding:3px 12px; font-size:12px; font-weight:700; margin-top:6px; }
-.tabs { background: #1A1A2E; border-bottom: 1px solid #2E2E45; overflow-x:auto; }
-.tabs-inner { display: flex; min-width:max-content; }
-.tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; cursor: pointer; padding: 11px 14px; font-size: 12px; font-weight: 600; color: #A0A0B8; font-family: inherit; white-space:nowrap; }
-.tab-btn.active { color: #E8A87C; border-bottom-color: #E8A87C; }
-.main { max-width: 900px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
-.card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #E8E4DF; }
-.card-title { font-weight: 700; color: #1A1A2E; font-size: 14px; margin-bottom: 14px; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.form-group { display: flex; flex-direction: column; }
-.form-group.full { grid-column: 1 / -1; }
-label, .field-lbl { font-size: 11px; font-weight: 600; color: #6B6B80; letter-spacing: 0.5px; margin-bottom: 4px; }
-input[type=text], input[type=number], select, textarea { width: 100%; border: 1.5px solid #DDD8D0; border-radius: 8px; padding: 9px 11px; font-size: 13px; color: #1A1A2E; background: #FAFAF8; outline: none; font-family: inherit; }
-input:focus, select:focus { border-color: #E8A87C; }
-input[readonly] { background: #F5F3EF; color: #6B6B80; }
-.btn-primary { background: #1A1A2E; color: #E8A87C; border: none; border-radius: 8px; padding: 11px 24px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
-.btn-secondary { background: #1A1A2E; color: #E8A87C; border: none; border-radius: 7px; padding: 7px 16px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
-.btn-danger { background: transparent; border: 1px solid #E0BCBC; border-radius: 6px; color: #D64045; font-size: 11px; padding: 3px 10px; cursor: pointer; font-family: inherit; }
-.badge { background: #E8A87C; color: #1A1A2E; border-radius: 20px; padding: 2px 10px; font-size: 11px; font-weight: 700; margin-left: 8px; }
-.upload-zone { width: 80px; height: 80px; border: 2px dashed #C8C4BE; border-radius: 10px; cursor: pointer; background: #FAFAF8; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
-.upload-zone:hover { border-color: #E8A87C; }
-.thumb { width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #E0DCD8; flex-shrink: 0; }
-.no-img { width: 100px; height: 100px; background: #F0EDEA; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #CCC; flex-shrink: 0; }
+.header h1 { color: #fff; font-size: 22px; font-weight: 700; }
+.header p { color: #A0A0B8; font-size: 12px; margin-top: 4px; }
+.main { max-width: 600px; margin: 0 auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 14px; }
+.card { background: #fff; border-radius: 12px; padding: 18px; border: 1px solid #E8E4DF; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+.card-title { font-weight: 700; color: #1A1A2E; font-size: 15px; margin-bottom: 14px; }
+label { font-size: 12px; font-weight: 600; color: #6B6B80; margin-bottom: 5px; display: block; }
+select { width: 100%; border: 1.5px solid #DDD8D0; border-radius: 8px; padding: 10px 12px; font-size: 14px; color: #1A1A2E; background: #FAFAF8; outline: none; font-family: inherit; }
+select:focus { border-color: #E8A87C; }
 .status-badge { display:inline-block; border-radius:6px; padding:3px 10px; font-size:11px; font-weight:600; }
-.table-wrap { overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-th { padding: 8px 10px; text-align: left; color: #6B6B80; font-weight: 600; font-size: 11px; border-bottom: 2px solid #E8E4DF; background: #F5F3EF; white-space:nowrap; }
-td { padding: 7px 10px; border-bottom: 1px solid #F0EDEA; vertical-align: middle; }
-.empty { text-align: center; color: #B0AAA4; font-size: 13px; padding: 40px 0; }
-.loading { text-align: center; color: #A0A0B8; font-size: 12px; padding: 28px 0; }
-.alert-box { background:#FFF3E0; border:1px solid #FFB74D; border-radius:10px; padding:14px 16px; }
-.alert-title { font-weight:700; color:#E65100; font-size:13px; margin-bottom:10px; }
-.inline-input { border: 1.5px solid #DDD8D0; border-radius: 6px; padding: 5px 8px; font-size: 12px; color: #1A1A2E; background: #FAFAF8; outline: none; font-family: inherit; width: 100%; }
-.inline-input:focus { border-color: #E8A87C; }
-.inline-calc { border: 1.5px solid #E8A87C; border-radius: 6px; padding: 5px 8px; font-size: 12px; color: #6B6B80; background: #FEF9F4; width: 100%; }
-.price-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:6px; margin-top:8px; }
-.saving-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#E8A87C; margin-left:6px; animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-.order-card { background:#fff; border-radius:12px; overflow:hidden; border:1px solid #E8E4DF; box-shadow:0 2px 8px rgba(0,0,0,0.04); }
-.order-card-header { background:#1A1A2E; padding:12px 16px; }
-.order-item-row { padding:14px 16px; border-bottom:1px solid #F0EDEA; display:flex; gap:12px; }
-.order-item-row:last-of-type { border-bottom:none; }
-.order-footer { background:#F9F7F5; border-top:2px solid #E8E4DF; padding:14px 16px; }
-.footer-grid { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-bottom:12px; }
-.total-row { display:flex; justify-content:space-between; align-items:center; border-top:1px solid #E8E4DF; padding-top:12px; }
-@media print {
-  body { background:white; }
-  .header,.tabs,.no-print { display:none !important; }
-  .main { padding:0; max-width:100%; }
-  .order-card { box-shadow:none; border:1px solid #ccc; break-inside:avoid; margin-bottom:12px; }
-  .order-card-header { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-}
+.thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #E0DCD8; flex-shrink: 0; }
+.no-thumb { width: 80px; height: 80px; background: #F0EDEA; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #CCC; flex-shrink: 0; }
+.empty { text-align: center; color: #B0AAA4; font-size: 14px; padding: 40px 0; }
+.loading { text-align: center; color: #A0A0B8; font-size: 13px; padding: 24px 0; }
 </style>
 </head>
 <body>
 <div class="header">
-  <div class="header-eyebrow">代購管理</div>
-  <h1>CC 選物代購</h1>
-  <p>訂單登記系統</p>
-  <div class="trip-badge" id="header-trip">📍 載入中…</div>
-</div>
-<div class="tabs">
-  <div class="tabs-inner">
-    <button class="tab-btn active" onclick="switchTab('orders')">📋 訂單列表</button>
-    <button class="tab-btn" onclick="switchTab('picking')">📋 訂單整理</button>
-    <button class="tab-btn" onclick="switchTab('shipping')">🚚 出貨單</button>
-    <button class="tab-btn" onclick="switchTab('customer')">👤 客人查詢</button>
-  </div>
+  <div class="header-eyebrow">CC 選物代購</div>
+  <h1>訂單查詢</h1>
+  <p>選擇你的暱稱，查看訂單狀態與金額</p>
 </div>
 
 <div class="main">
-
-  <!-- 訂單列表 -->
-  <div id="orders-tab">
-    <!-- 新增訂單 -->
-    <div class="card no-print">
-      <div class="card-title">新增訂單</div>
-      <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:14px">
-        <div>
-          <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
-            <span style="font-size:22px">📷</span>
-          </div>
-          <input type="file" id="file-input" accept="image/*" style="display:none" onchange="handleFile(this)">
-          <button class="btn-danger" id="remove-img-btn" style="display:none;margin-top:4px;width:80px" onclick="removeImage()">✕ 移除</button>
-        </div>
-        <div style="flex:1">
-          <div class="form-grid">
-            <div class="form-group"><label>暱稱 *</label><input type="text" id="f-nickname" placeholder="客人暱稱"></div>
-            <div class="form-group"><label>商品 *</label><input type="text" id="f-item" placeholder="如：上衣、零食"></div>
-            <div class="form-group"><label>日幣 ¥</label><input type="number" id="f-jpy" placeholder="如：1500" oninput="calcTwd()"></div>
-            <div class="form-group"><label>數量</label><input type="number" id="f-qty" placeholder="1" min="1"></div>
-            <div class="form-group"><label>尺寸/規格</label><input type="text" id="f-size" placeholder="如：粉100、藍S"></div>
-            <div class="form-group"><label>匯率 ¥1=NT$?</label><input type="number" id="f-rate" step="0.01" value="0.3" placeholder="0.3" oninput="calcTwd()"></div>
-            <div class="form-group"><label>換算台幣（自動）</label><input type="text" id="f-calc" readonly placeholder="自動計算"></div>
-            <div class="form-group"><label>直接台幣售價</label><input type="number" id="f-twd" placeholder="填了優先使用"></div>
-            <div class="form-group full"><label>備註</label><input type="text" id="f-vendor" placeholder="備註（廠商、顏色、規格等）"></div>
-            <div class="form-group full">
-              <label>商品狀態</label>
-              <select id="f-status">
-                <option value="pending">處理中</option>
-                <option value="success">採購成功</option>
-                <option value="outofstock">斷貨</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="form-error" style="color:#D64045;font-size:12px;margin-bottom:8px;display:none"></div>
-      <div id="form-success" style="color:#2E7D32;font-size:12px;margin-bottom:8px;display:none"></div>
-      <button class="btn-primary" id="add-btn" onclick="addOrder()">+ 加入訂單</button>
-    </div>
-
-    <!-- 團次管理 -->
-    <div class="card no-print">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:13px;font-weight:600;color:#1A1A2E">目前團次：</span>
-          <span id="current-trip-label" style="background:#E8A87C;color:#1A1A2E;border-radius:6px;padding:3px 12px;font-size:13px;font-weight:700">載入中…</span>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button onclick="toggleArchived()" id="archive-btn" style="background:transparent;border:1.5px solid #DDD8D0;border-radius:6px;padding:6px 12px;font-size:11px;color:#6B6B80;cursor:pointer;font-family:inherit">📦 查看歷史</button>
-          <button onclick="closeTrip()" style="background:#D64045;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">🔒 結團</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div style="font-size:11px;font-weight:600;color:#6B6B80;margin-bottom:6px">切換團次</div>
-          <div style="display:flex;gap:6px">
-            <select id="trip-select" style="flex:1;border:1.5px solid #DDD8D0;border-radius:6px;padding:7px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit"></select>
-            <button onclick="switchTrip()" style="background:#1A1A2E;color:#E8A87C;border:none;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit">切換</button>
-          </div>
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:600;color:#6B6B80;margin-bottom:6px">新增團次</div>
-          <div style="display:flex;gap:6px">
-            <input type="text" id="new-trip-input" placeholder="輸入新團次名稱" style="flex:1;border:1.5px solid #DDD8D0;border-radius:6px;padding:7px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-            <button onclick="addTrip()" style="background:#1A1A2E;color:#E8A87C;border:none;border-radius:6px;padding:7px 12px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap">＋ 新增</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 訂單列表 -->
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div><span style="font-weight:700;color:#1A1A2E;font-size:14px">所有訂單</span><span class="badge" id="order-count">0</span></div>
-        <button class="btn-secondary no-print" onclick="loadOrders()">🔄 重整</button>
-      </div>
-      <div class="loading" id="loading-orders">載入中…</div>
-      <div class="table-wrap" id="table-wrap" style="display:none">
-        <table>
-          <thead><tr><th>圖片</th><th>日期</th><th>暱稱</th><th>商品</th><th>尺寸</th><th>數量</th><th>備註</th><th>日幣</th><th>台幣</th><th>總額</th><th>狀態</th><th></th></tr></thead>
-          <tbody id="order-tbody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-
-  <!-- 訂單整理 -->
-  <div id="picking-tab" style="display:none">
-    <!-- 待處理提醒 -->
-    <div class="alert-box no-print" id="alert-box" style="display:none">
-      <div class="alert-title">⚠️ 待處理項目（未填價格或狀態為處理中）</div>
-      <select id="alert-select" onchange="showAlertDetail()" style="width:100%;border:1.5px solid #FFB74D;border-radius:8px;padding:8px;font-size:13px;color:#E65100;background:#fff;outline:none;font-family:inherit;margin-bottom:8px">
-        <option value="">-- 選擇客人查看詳細 --</option>
-      </select>
-      <div id="alert-detail" style="display:none;flex-direction:column;gap:6px"></div>
-    </div>
-
-    <!-- 子標籤 -->
-    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap" class="no-print">
-      <button id="ptab-order" onclick="switchPickingTab('order')"
-        style="background:#1A1A2E;color:#E8A87C;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">📋 訂單整理</button>
-      <button id="ptab-payment" onclick="switchPickingTab('payment')"
-        style="background:#F5F3EF;color:#6B6B80;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">💰 待付款</button>
-      <button id="ptab-done" onclick="switchPickingTab('done')"
-        style="background:#F5F3EF;color:#6B6B80;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">✅ 已完成</button>
-    </div>
-
-    <!-- 訂單整理區 -->
-    <div id="picking-order-section">
-      <div class="card no-print">
-        <label style="margin-bottom:6px">選擇客人</label>
-        <select id="picking-select" onchange="onPickingSelect()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          <option value="">-- 選擇客人 --</option>
-        </select>
-      </div>
-      <div class="loading" id="loading-picking" style="display:none">載入中…</div>
-      <div id="picking-content"></div>
-    </div>
-
-    <!-- 待付款區 -->
-    <div id="picking-payment-section" style="display:none">
-      <div class="loading" id="loading-payment">載入中…</div>
-      <div id="payment-content"></div>
-    </div>
-
-    <!-- 已完成區 -->
-    <div id="picking-done-section" style="display:none">
-      <div class="loading" id="loading-done">載入中…</div>
-      <div id="done-content"></div>
-    </div>
-  </div>
-
-  <!-- 出貨單 -->
-  <div id="shipping-tab" style="display:none">
-    <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <span style="font-weight:700;color:#1A1A2E;font-size:14px">出貨單</span>
-      <button class="btn-secondary" onclick="printPage()">🖨 列印</button>
-    </div>
-
-    <!-- 待處理提醒 -->
-    <div class="alert-box no-print" id="ship-alert-box" style="display:none;margin-bottom:14px">
-      <div class="alert-title">⚠️ 待處理項目（未填價格或狀態為處理中）</div>
-      <select id="ship-alert-select" onchange="showShipAlertDetail()" style="width:100%;border:1.5px solid #FFB74D;border-radius:8px;padding:8px;font-size:13px;color:#E65100;background:#fff;outline:none;font-family:inherit;margin-bottom:8px">
-        <option value="">-- 選擇客人查看詳細 --</option>
-      </select>
-      <div id="ship-alert-detail" style="display:none;flex-direction:column;gap:6px"></div>
-    </div>
-
-    <!-- 選客人 -->
-    <div class="card no-print" style="margin-bottom:14px">
-      <label style="margin-bottom:6px">選擇客人</label>
-      <select id="shipping-select" onchange="onShippingSelect()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-        <option value="">-- 選擇客人 --</option>
+  <div class="card">
+    <div class="card-title">查詢我的訂單</div>
+    <label>選擇你的暱稱</label>
+    <select id="name-select" onchange="onNameSelect()" style="margin-bottom:12px">
+      <option value="">-- 選擇你的暱稱 --</option>
+    </select>
+    <div id="trip-wrap" style="display:none">
+      <label>選擇團次（可選）</label>
+      <select id="trip-select" onchange="showResult()">
+        <option value="">-- 全部團次 --</option>
       </select>
     </div>
-
-    <!-- 團次總金額 -->
-    <div class="card no-print" style="margin-bottom:14px">
-      <div style="font-size:12px;font-weight:600;color:#6B6B80;margin-bottom:8px">查詢團次總售出金額</div>
-      <div style="display:flex;gap:8px">
-        <select id="revenue-select" style="flex:1;border:1.5px solid #DDD8D0;border-radius:8px;padding:8px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          <option value="">-- 選擇團次 --</option>
-        </select>
-        <button onclick="showRevenue()" class="btn-secondary">查詢</button>
-      </div>
-      <div id="revenue-result" style="display:none;margin-top:12px;background:#FEF9F4;border-radius:8px;padding:14px;border:1px solid #E8A87C">
-        <div style="font-size:12px;color:#6B6B80;margin-bottom:6px" id="revenue-label"></div>
-        <div style="font-size:22px;font-weight:700;color:#E8A87C;margin-bottom:12px" id="revenue-amount"></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-          <div style="background:#fff;border-radius:8px;padding:10px;text-align:center;border:1px solid #E8E4DF">
-            <div style="font-size:10px;color:#6B6B80;margin-bottom:4px">登記總數</div>
-            <div style="font-size:18px;font-weight:700;color:#1A1A2E" id="stat-total">-</div>
-          </div>
-          <div style="background:#E8F5E9;border-radius:8px;padding:10px;text-align:center;border:1px solid #C8E6C9">
-            <div style="font-size:10px;color:#2E7D32;margin-bottom:4px">採購成功</div>
-            <div style="font-size:18px;font-weight:700;color:#2E7D32" id="stat-success">-</div>
-          </div>
-          <div style="background:#F0F0F8;border-radius:8px;padding:10px;text-align:center;border:1px solid #D0D0E8">
-            <div style="font-size:10px;color:#A0A0B8;margin-bottom:4px">待處理</div>
-            <div style="font-size:18px;font-weight:700;color:#A0A0B8" id="stat-pending">-</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="loading" id="loading-shipping" style="display:none">載入中…</div>
-    <div id="shipping-content"></div>
   </div>
-
-  <!-- 客人查詢 -->
-  <div id="customer-tab" style="display:none">
-    <div class="card no-print">
-      <label style="margin-bottom:6px">選擇團次</label>
-      <select id="customer-trip-select" onchange="onCustomerTripSelect()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit;margin-bottom:12px">
-        <option value="">-- 選擇團次 --</option>
-      </select>
-      <div id="customer-name-wrap" style="display:none">
-        <label style="margin-bottom:6px">選擇客人</label>
-        <select id="customer-select" onchange="onCustomerSelect()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          <option value="">-- 選擇客人 --</option>
-        </select>
-      </div>
-    </div>
-    <div class="loading" id="loading-customer" style="display:none">載入中…</div>
-    <div id="customer-content" style="margin-top:14px"></div>
-  </div>
-
+  <div class="loading" id="loading">載入中…</div>
+  <div id="result"></div>
 </div>
 
 <script>
@@ -306,42 +63,24 @@ const STATUS = {
 const COUNT_STATUSES = ['success'];
 
 let allOrders = [];
-let currentTrip = '';
-let knownTrips = [];
-let showArchived = false;
-let currentImageFile = null;
-const saveTimers = {};
+let allPayments = [];
 
-// ── Helpers ────────────────────────────────────────
 function esc(s) {
   if (!s) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function fmt(d) { return d ? String(d).slice(0,10) : '-'; }
-function statusBadge(status) {
-  const s = STATUS[status] || STATUS.pending;
-  return `<span class="status-badge" style="background:${s.bg};color:${s.color}">${s.label}</span>`;
-}
+
 function calcTwdVal(o) {
   if (o.price_twd && Number(o.price_twd) > 0) return Number(o.price_twd);
   if (o.price_jpy && o.rate) return o.price_jpy * o.rate;
   return 0;
 }
+
 function itemTotal(o) {
   if (!COUNT_STATUSES.includes(o.status || 'pending')) return 0;
   return calcTwdVal(o) * (parseInt(o.quantity) || 1);
 }
-function groupByNickname(orders) {
-  const map = {}, display = {};
-  orders.forEach(o => {
-    const k = o.nickname.toLowerCase();
-    if (!map[k]) { map[k] = []; display[k] = o.nickname; }
-    map[k].push(o);
-  });
-  const result = {};
-  Object.keys(map).forEach(k => result[display[k]] = map[k]);
-  return result;
-}
+
 function getGroupFields(items) {
   const shippingVals = items.map(o => Number(o.shipping)||0).filter(v => v > 0);
   const extraVals = items.map(o => Number(o.extra)||0).filter(v => v > 0);
@@ -355,1218 +94,176 @@ function getGroupFields(items) {
   };
 }
 
-function needsAttention(o) {
-  if (o.status === 'outofstock') return false; // 斷貨不出現
-  const nickname = o.nickname.toLowerCase();
-  const pmList = paymentsCache[nickname] || [];
-  const hasPaid = pmList.length > 0;
-  if (hasPaid) return false; // 已付款不出現
-  // 未付款的：處理中、未填價格、採購成功都要出現
-  const hasTwd = Number(o.price_twd) > 0;
-  const hasJpy = Number(o.price_jpy) > 0;
-  const missingPrice = !hasTwd && !hasJpy;
-  const isPending = (o.status || 'pending') === 'pending';
-  const isSuccess = o.status === 'success';
-  return isPending || missingPrice || isSuccess;
-}
-
-// ── Image ──────────────────────────────────────────
-function compressImage(file) {
-  return new Promise(resolve => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let w = img.width, h = img.height, max = 1200;
-        if (w > max || h > max) {
-          if (w > h) { h = Math.round(h*max/w); w = max; }
-          else { w = Math.round(w*max/h); h = max; }
-        }
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        let q = 0.85;
-        const tryIt = () => canvas.toBlob(blob => {
-          if (blob.size > 800*1024 && q > 0.4) { q -= 0.1; tryIt(); }
-          else resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-        }, 'image/jpeg', q);
-        tryIt();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  });
-}
-async function handleFile(input) {
-  if (!input.files[0]) return;
-  const file = await compressImage(input.files[0]);
-  currentImageFile = file;
-  const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('upload-zone').innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover">`;
-    document.getElementById('remove-img-btn').style.display = 'block';
-  };
-  reader.readAsDataURL(file);
-}
-function removeImage() {
-  currentImageFile = null;
-  document.getElementById('upload-zone').innerHTML = '<span style="font-size:22px">📷</span>';
-  document.getElementById('remove-img-btn').style.display = 'none';
-  document.getElementById('file-input').value = '';
-}
-
-// ── Form ───────────────────────────────────────────
-function calcTwd() {
-  const jpy = parseFloat(document.getElementById('f-jpy').value) || 0;
-  const rate = parseFloat(document.getElementById('f-rate').value) || 0;
-  const el = document.getElementById('f-calc');
-  el.value = (jpy && rate) ? 'NT$' + Math.round(jpy * rate).toLocaleString() : '';
-}
-async function addOrder() {
-  const nickname = document.getElementById('f-nickname').value.trim();
-  const item = document.getElementById('f-item').value.trim();
-  if (!nickname || !item) {
-    const e = document.getElementById('form-error');
-    e.textContent = '請至少填寫暱稱和商品'; e.style.display = 'block'; return;
-  }
-  document.getElementById('form-error').style.display = 'none';
-  const btn = document.getElementById('add-btn');
-  btn.disabled = true; btn.textContent = '儲存中…';
-
-  let image_url = null;
-  if (currentImageFile) {
-    const fname = Date.now() + '.jpg';
-    const { error: ue } = await sb.storage.from('product-image').upload(fname, currentImageFile);
-    if (!ue) {
-      const { data: ud } = sb.storage.from('product-image').getPublicUrl(fname);
-      image_url = ud.publicUrl;
-    }
-  }
-  const row = {
-    nickname,
-    item,
-    size: document.getElementById('f-size').value.trim(),
-    quantity: parseInt(document.getElementById('f-qty').value) || 1,
-    vendor: document.getElementById('f-vendor').value.trim(),
-    price_jpy: parseFloat(document.getElementById('f-jpy').value) || 0,
-    rate: parseFloat(document.getElementById('f-rate').value) || 0,
-    price_twd: parseFloat(document.getElementById('f-twd').value) || 0,
-    status: document.getElementById('f-status').value,
-    trip: currentTrip,
-    image_url,
-  };
-  const { error } = await sb.from('orders').insert([row]);
-  btn.disabled = false; btn.textContent = '+ 加入訂單';
-  if (error) {
-    const e = document.getElementById('form-error');
-    e.textContent = '儲存失敗：' + error.message; e.style.display = 'block'; return;
-  }
-  const s = document.getElementById('form-success');
-  s.textContent = '✓ 訂單已儲存！'; s.style.display = 'block';
-  setTimeout(() => s.style.display = 'none', 3000);
-  ['f-nickname','f-item','f-size','f-qty','f-vendor','f-jpy','f-twd','f-calc'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  document.getElementById('f-rate').value = '0.3';
-  document.getElementById('f-status').value = 'pending';
-  removeImage();
-  await loadOrders();
-}
-
-// ── Image update ──────────────────────────────────
-async function updateOrderImage(id, input) {
-  if (!input.files[0]) return;
-  const file = await compressImage(input.files[0]);
-  const fname = Date.now() + '.jpg';
-  const { error: ue } = await sb.storage.from('product-image').upload(fname, file);
-  if (ue) { alert('圖片上傳失敗'); return; }
-  const { data: ud } = sb.storage.from('product-image').getPublicUrl(fname);
-  await sb.from('orders').update({ image_url: ud.publicUrl }).eq('id', id);
-  await loadOrders(true);
-  onPickingSelect(true);
-}
-
-async function removeOrderImage(id) {
-  if (!confirm('確定移除圖片？')) return;
-  await sb.from('orders').update({ image_url: null }).eq('id', id);
-  await loadOrders(true);
-  onPickingSelect(true);
-}
-
-// ── Auto-save single field ─────────────────────────
-function autoSave(orderId, field, value) {
-  const key = `${orderId}_${field}`;
-  clearTimeout(saveTimers[key]);
-  saveTimers[key] = setTimeout(async () => {
-    const data = {};
-    if (['price_jpy','rate','price_twd'].includes(field)) data[field] = parseFloat(value) || 0;
-    else if (field === 'quantity') data[field] = parseInt(value) || 1;
-    else data[field] = value;
-    await sb.from('orders').update(data).eq('id', orderId);
-    // Refresh totals without full reload
-    await loadOrders(true);
-  }, 800);
-}
-
-// ── Load ───────────────────────────────────────────
-async function loadOrders(silent = false) {
-  if (!silent) {
-    document.getElementById('loading-orders').style.display = 'block';
-    document.getElementById('table-wrap').style.display = 'none';
-  }
+async function loadAll() {
   // Fetch all orders in batches to bypass 1000 row limit
   let allData = [];
   let from = 0;
   const batchSize = 1000;
   while (true) {
     const { data, error } = await sb.from('orders').select('*')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
       .range(from, from + batchSize - 1);
     if (error || !data || data.length === 0) break;
     allData = allData.concat(data);
     if (data.length < batchSize) break;
     from += batchSize;
   }
+  const { data: payments } = await sb.from('payments').select('*');
   allOrders = allData;
+  allPayments = payments || [];
+  document.getElementById('loading').style.display = 'none';
 
-  // Update known trips
-  const dbTrips = [...new Set(allOrders.map(o => o.trip).filter(Boolean))];
-  dbTrips.forEach(t => { if (!knownTrips.includes(t)) knownTrips.push(t); });
-
-  // Auto-select latest trip by most recent order's trip
-  if (!currentTrip && allOrders.length > 0) {
-    // allOrders is sorted by created_at desc, so first order is newest
-    currentTrip = allOrders[0].trip || knownTrips[0] || '';
-  }
-
-  const filtered = showArchived ? allOrders : allOrders.filter(o => (o.trip || currentTrip) === currentTrip);
-
-  renderTable(filtered);
-  renderTripUI();
-  populateSelects(filtered);
-  await loadPayments(currentTrip);
-  renderAlerts(filtered);
-
-  // Re-render active picking/shipping/customer if visible
-  const activeTab = document.querySelector('.tab-btn.active');
-  if (activeTab) {
-    const tab = activeTab.getAttribute('onclick').match(/'(\w+)'/)?.[1];
-    if (tab === 'picking') onPickingSelect(true);
-    if (tab === 'shipping') onShippingSelect(true);
-    if (tab === 'customer') onCustomerSelect(true);
-  }
-}
-
-// ── Trip UI ────────────────────────────────────────
-function renderTripUI() {
-  document.getElementById('header-trip').textContent = showArchived ? '📦 查看歷史中' : `📍 ${currentTrip}`;
-  document.getElementById('current-trip-label').textContent = showArchived ? '查看歷史中' : currentTrip;
-  document.getElementById('archive-btn').textContent = showArchived ? '📋 回到本團' : '📦 查看歷史';
-  const sel = document.getElementById('trip-select');
-  if (sel) {
-    sel.innerHTML = knownTrips.map(t => `<option value="${esc(t)}" ${t===currentTrip?'selected':''}>${esc(t)}</option>`).join('');
-  }
-  const revSel = document.getElementById('revenue-select');
-  if (revSel) {
-    revSel.innerHTML = '<option value="">-- 選擇團次 --</option>' +
-      knownTrips.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
-  }
-}
-function switchTrip() {
-  const v = document.getElementById('trip-select').value;
-  if (v) { currentTrip = v; showArchived = false; loadOrders(); }
-}
-function addTrip() {
-  const v = document.getElementById('new-trip-input').value.trim();
-  if (!v) { alert('請輸入團次名稱'); return; }
-  if (knownTrips.includes(v)) { alert('此團次已存在'); return; }
-  knownTrips.push(v);
-  currentTrip = v;
-  showArchived = false;
-  document.getElementById('new-trip-input').value = '';
-  loadOrders();
-  alert(`已新增並切換到「${v}」！`);
-}
-function closeTrip() {
-  const pwd = prompt('請輸入結團密碼：');
-  if (pwd !== '888') { alert('密碼錯誤！'); return; }
-  if (!confirm(`確定結束「${currentTrip}」？`)) return;
-  showArchived = true;
-  loadOrders();
-  alert(`「${currentTrip}」已結團！需要開新團時請在「新增團次」輸入名稱。`);
-}
-function toggleArchived() {
-  showArchived = !showArchived;
-  loadOrders();
-}
-
-// ── Populate Selects ──────────────────────────────
-function populateSelects(orders) {
-  const groups = groupByNickname(orders);
-  const names = Object.keys(groups).sort((a,b) => a.localeCompare(b,'zh-TW'));
-
-  // Populate customer trip select
-  const customerTripSel = document.getElementById('customer-trip-select');
-  if (customerTripSel) {
-    const allTrips = [...new Set(allOrders.map(o=>o.trip).filter(Boolean))];
-    allTrips.sort((a,b)=>{
-      const na=parseInt(a.replace(/[^0-9]/g,''))||0;
-      const nb=parseInt(b.replace(/[^0-9]/g,''))||0;
-      return nb-na;
-    });
-    customerTripSel.innerHTML = '<option value="">-- 選擇團次 --</option>' +
-      allTrips.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
-  }
-
-  ['picking-select','shipping-select'].forEach(id => {
-    const sel = document.getElementById(id);
-    if (!sel) return;
-    const cur = sel.value;
-    let opts = '<option value="">-- 選擇客人 --</option>';
-    if (id === 'picking-select') {
-      opts += `<option value="__ALL__" ${cur==='__ALL__'?'selected':''}>📋 全部商品（按時間）</option>`;
-      opts += `<option value="__PENDING__" ${cur==='__PENDING__'?'selected':''}>⏳ 待處理商品</option>`;
-    }
-    opts += names.map(n => `<option value="${esc(n)}" ${n===cur?'selected':''}>${esc(n)}</option>`).join('');
-    sel.innerHTML = opts;
+  // Populate name select (case-insensitive dedup)
+  const nameMap = {};
+  allOrders.forEach(o => {
+    const k = o.nickname.toLowerCase();
+    if (!nameMap[k]) nameMap[k] = o.nickname;
   });
+  const names = Object.values(nameMap).sort();
+  const sel = document.getElementById('name-select');
+  sel.innerHTML = '<option value="">-- 選擇你的暱稱 --</option>' +
+    names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
 }
 
-// ── Alerts ─────────────────────────────────────────
-function renderAlerts(orders) {
-  const bad = orders.filter(needsAttention);
-  const groups = groupByNickname(bad);
-  const names = Object.keys(groups).sort((a,b) => a.localeCompare(b,'zh-TW'));
+function onNameSelect() {
+  const name = document.getElementById('name-select').value;
+  const tripWrap = document.getElementById('trip-wrap');
+  const result = document.getElementById('result');
+  if (!name) { tripWrap.style.display = 'none'; result.innerHTML = ''; return; }
 
-  ['alert-box','ship-alert-box'].forEach(boxId => {
-    const box = document.getElementById(boxId);
-    const sel = document.getElementById(boxId === 'alert-box' ? 'alert-select' : 'ship-alert-select');
-    if (!box || !sel) return;
-    if (names.length > 0) {
-      box.style.display = 'block';
-      sel.innerHTML = `<option value="">-- 選擇客人查看詳細 (${names.length} 位) --</option>` +
-        names.map(n => `<option value="${esc(n)}">${esc(n)}（${groups[n].length} 件）</option>`).join('');
-      sel._groups = groups;
-    } else {
-      box.style.display = 'none';
-    }
+  // Get trips for this customer
+  const myOrders = allOrders.filter(o => o.nickname.toLowerCase() === name.toLowerCase());
+  const trips = [...new Set(myOrders.map(o => o.trip).filter(Boolean))];
+  trips.sort((a,b) => {
+    const na = parseInt(a.replace(/[^0-9]/g,''))||0;
+    const nb = parseInt(b.replace(/[^0-9]/g,''))||0;
+    return nb - na;
   });
-}
-function showAlertDetail() { _showAlertDetailFor('alert-select','alert-detail','picking-select'); }
-function showShipAlertDetail() { _showAlertDetailFor('ship-alert-select','ship-alert-detail','shipping-select'); }
-function _showAlertDetailFor(selId, detailId, targetSelId) {
-  const sel = document.getElementById(selId);
-  const detail = document.getElementById(detailId);
-  const name = sel.value;
-  if (!name) { detail.style.display = 'none'; return; }
-  const items = sel._groups?.[name] || [];
-  detail.style.display = 'flex';
-  detail.innerHTML = items.map(o => {
-    const hasTwd = Number(o.price_twd) > 0;
-    const hasJpy = Number(o.price_jpy) > 0;
-    const missingPrice = !hasTwd && !hasJpy && o.status !== 'outofstock';
-    const isPending = (o.status || 'pending') === 'pending';
-    const tags = [];
-    if (missingPrice) tags.push('<span style="background:#FFEBEE;color:#D64045;border-radius:4px;padding:1px 6px;font-size:10px">未填價格</span>');
-    if (isPending) tags.push('<span style="background:#F0F0F8;color:#A0A0B8;border-radius:4px;padding:1px 6px;font-size:10px">處理中</span>');
-    return `<div style="background:#fff;border-radius:8px;padding:8px 12px;border:1px solid #FFB74D;display:flex;justify-content:space-between;align-items:center;gap:8px">
-      <div style="flex:1">
-        <div style="font-weight:600;color:#1A1A2E;font-size:12px">${esc(o.item)}${o.size?'　'+esc(o.size):''}</div>
-        <div style="display:flex;gap:4px;margin-top:3px">${tags.join('')}</div>
-      </div>
-      <button onclick="document.getElementById('${targetSelId}').value='${esc(name)}'; ${targetSelId==='picking-select'?'onPickingSelect':'onShippingSelect'}()"
-        style="background:#E65100;color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap">前往整理</button>
-    </div>`;
-  }).join('');
+
+  const tripSel = document.getElementById('trip-select');
+  tripSel.innerHTML = '<option value="">-- 全部團次 --</option>' +
+    trips.map(t => `<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  tripSel.value = '';
+
+  tripWrap.style.display = trips.length > 1 ? 'block' : 'none';
+  showResult();
 }
 
-// ── Table ──────────────────────────────────────────
-function renderTable(orders) {
-  document.getElementById('loading-orders').style.display = 'none';
-  document.getElementById('table-wrap').style.display = 'block';
-  document.getElementById('order-count').textContent = orders.length;
-  const sorted = [...orders].sort((a,b) => new Date(b.created_at)-new Date(a.created_at));
-  document.getElementById('order-tbody').innerHTML = sorted.map(o => {
-    const s = STATUS[o.status] || STATUS.pending;
-    const twd = calcTwdVal(o);
-    return `<tr>
-      <td>${o.image_url?`<img src="${esc(o.image_url)}" style="width:52px;height:52px;object-fit:cover;border-radius:6px">`:
-        '<div style="width:52px;height:52px;background:#F0EDEA;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#CCC">無圖</div>'}</td>
-      <td style="font-size:11px;color:#6B6B80">${fmt(o.created_at)}</td>
-      <td style="font-weight:600">${esc(o.nickname)}</td>
-      <td>${esc(o.item)}</td>
-      <td>${esc(o.size)||'-'}</td>
-      <td style="text-align:center">${o.quantity||1}</td>
-      <td style="color:#6B6B80">${esc(o.vendor)||'-'}</td>
-      <td style="font-size:11px;color:#6B6B80">${o.price_jpy>0?'¥'+Number(o.price_jpy).toLocaleString():'-'}</td>
-      <td style="font-weight:600">${twd>0?'NT$'+Math.round(twd).toLocaleString():'-'}</td>
-      <td style="font-weight:600;color:#E8A87C">${itemTotal(o)>0?'NT$'+Math.round(itemTotal(o)).toLocaleString():'-'}</td>
-      <td><span class="status-badge" style="background:${s.bg};color:${s.color};font-size:10px">${s.label}</span></td>
-      <td><button onclick="deleteOrder(${o.id})" style="background:transparent;border:none;color:#C0A0A0;cursor:pointer;font-size:16px">×</button></td>
-    </tr>`;
-  }).join('');
-}
-async function deleteOrder(id) {
-  const pwd = prompt('請輸入刪除密碼：');
-  if (pwd !== '888') { alert('密碼錯誤！'); return; }
-  await sb.from('orders').delete().eq('id', id);
-  await loadOrders();
-}
+function showResult() {
+  const name = document.getElementById('name-select').value;
+  const trip = document.getElementById('trip-select').value;
+  const result = document.getElementById('result');
+  if (!name) { result.innerHTML = ''; return; }
 
-// ── Picking Tabs ──────────────────────────────────
-function switchPickingTab(tab) {
-  ['order','payment','done'].forEach(t => {
-    document.getElementById('picking-'+t+'-section').style.display = t===tab?'block':'none';
-    const btn = document.getElementById('ptab-'+t);
-    if (btn) {
-      btn.style.background = t===tab?'#1A1A2E':'#F5F3EF';
-      btn.style.color = t===tab?'#E8A87C':'#6B6B80';
-      btn.style.border = t===tab?'none':'1.5px solid #DDD8D0';
-    }
-  });
-  const orders = showArchived ? allOrders : allOrders.filter(o=>(o.trip||currentTrip)===currentTrip);
-  if (tab==='payment') renderPaymentList(orders);
-  if (tab==='done') renderDoneList(orders);
-}
+  let items = allOrders.filter(o => o.nickname.toLowerCase() === name.toLowerCase());
+  if (trip) items = items.filter(o => (o.trip||'') === trip);
+  if (!items.length) { result.innerHTML = '<div class="empty">找不到訂單</div>'; return; }
 
-// ── Picking ────────────────────────────────────────
-function onPickingSelect(silent = false) {
-  const val = document.getElementById('picking-select').value;
-  const orders = showArchived ? allOrders : allOrders.filter(o => (o.trip||currentTrip)===currentTrip);
-  if (!val) { document.getElementById('picking-content').innerHTML = ''; return; }
-  if (val === '__ALL__') { renderPickingAll(orders); return; }
-  if (val === '__PENDING__') { renderPickingPending(orders); return; }
-
-  renderPickingCustomer(val, orders);
-}
-
-function renderPickingAll(orders) {
-  const sorted = [...orders].sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
-  if (!sorted.length) { document.getElementById('picking-content').innerHTML = '<div class="empty">尚無訂單</div>'; return; }
-  let html = '<div class="order-card"><div class="order-card-header" style="display:flex;justify-content:space-between;align-items:center"><span style="color:#fff;font-weight:700">全部商品（按時間）</span><span style="color:#E8A87C;font-size:12px">共 '+sorted.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)+' 件</span></div>';
-  sorted.forEach((o,i) => {
-    const s = STATUS[o.status]||STATUS.pending;
-    const twd = calcTwdVal(o);
-    html += `<div style="padding:12px 16px;border-bottom:1px solid #F0EDEA;background:${i%2?'#FAFAF8':'#fff'}">
-      <div style="display:flex;gap:10px;align-items:flex-start">
-        ${o.image_url?`<img src="${esc(o.image_url)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0">`:
-          '<div style="width:80px;height:80px;background:#F0EDEA;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#CCC">無圖</div>'}
-        <div style="flex:1">
-          <div style="font-weight:700;color:#1A1A2E;font-size:14px">${esc(o.item)}</div>
-          <div style="font-size:12px;color:#6B6B80;margin-top:2px"><span style="color:#E8A87C;font-weight:600">${esc(o.nickname)}</span>${o.size?'　'+esc(o.size):''}　數量：${o.quantity||1}${o.vendor?'　<span style="background:#F0EDEA;border-radius:4px;padding:1px 6px">'+esc(o.vendor)+'</span>':''}</div>
-          <div class="price-grid" style="margin-top:8px">
-            <div><div class="field-lbl">日幣 ¥</div><input class="inline-input" type="number" value="${o.price_jpy||''}" placeholder="1500" oninput="autoSave(${o.id},'price_jpy',this.value); calcInlineTwd(${o.id},this.closest('.price-grid'))"></div>
-            <div><div class="field-lbl">匯率</div><input class="inline-input" type="number" step="0.01" value="${o.rate||''}" placeholder="0.3" oninput="autoSave(${o.id},'rate',this.value); calcInlineTwd(${o.id},this.closest('.price-grid'))"></div>
-            <div><div class="field-lbl">換算台幣</div><input class="inline-calc" id="calc-${o.id}" readonly value="${(o.price_jpy&&o.rate)?'NT$'+Math.round(o.price_jpy*o.rate).toLocaleString():''}"></div>
-            <div><div class="field-lbl">直接台幣</div><input class="inline-input" type="number" value="${o.price_twd||''}" placeholder="直接填" oninput="autoSave(${o.id},'price_twd',this.value)"></div>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
-            <span class="status-badge" style="background:${s.bg};color:${s.color};font-size:11px">${s.label}</span>
-            <select onchange="autoSave(${o.id},'status',this.value)" style="border:1.5px solid #DDD8D0;border-radius:6px;padding:3px 8px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-              ${Object.entries(STATUS).map(([v,st])=>`<option value="${v}" ${(o.status||'pending')===v?'selected':''}>${st.label}</option>`).join('')}
-            </select>
-            <span style="font-size:11px;color:#B0A8A0;margin-left:auto">${fmt(o.created_at)}</span>
-            <button class="btn-danger" onclick="deleteOrder(${o.id})">✕</button>
-          </div>
-        </div>
-      </div>
-    </div>`;
-  });
-  html += '</div>';
-  document.getElementById('picking-content').innerHTML = html;
-}
-
-function renderPickingPending(orders) {
-  const pending = orders.filter(needsAttention).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-  if (!pending.length) {
-    document.getElementById('picking-content').innerHTML = '<div class="empty" style="color:#2E7D32">✓ 沒有待處理商品！</div>';
-    return;
-  }
-  renderPickingAll(pending);
-}
-
-function renderPickingCustomer(name, orders) {
-  const items = orders.filter(o => o.nickname.toLowerCase() === name.toLowerCase())
-    .sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
-  if (!items.length) { document.getElementById('picking-content').innerHTML = '<div class="empty">找不到此客人訂單</div>'; return; }
-
-  // Calculate totals from DB data directly
-  const itemsTwd = items.reduce((s,o) => s + itemTotal(o), 0);
-  const { shipping, extra, discount, note } = getGroupFields(items);
-  const total = itemsTwd + shipping + extra - discount;
-
-  let html = `<div class="order-card">
-    <div class="order-card-header">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div style="color:#fff;font-weight:700;font-size:15px">${esc(name)}</div>
-        <span style="color:#E8A87C;font-size:12px">共 ${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</span>
-      </div>
-    </div>`;
-
+  // Group by trip
+  const tripMap = {};
   items.forEach(o => {
-    const s = STATUS[o.status]||STATUS.pending;
-    html += `<div class="order-item-row">
-      <div style="flex-shrink:0;position:relative">
-        ${o.image_url
-          ? `<img src="${esc(o.image_url)}" class="thumb" onclick="document.getElementById('img-input-${o.id}').click()" style="cursor:pointer" title="點擊更換圖片">`
-          : `<div class="no-img" onclick="document.getElementById('img-input-${o.id}').click()" style="cursor:pointer">📷<br>上傳</div>`}
-        <input type="file" id="img-input-${o.id}" accept="image/*" style="display:none" onchange="updateOrderImage(${o.id}, this)">
-        ${o.image_url?`<button onclick="removeOrderImage(${o.id})" style="position:absolute;top:-6px;right:-6px;background:#D64045;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">✕</button>`:''}
-      </div>
-      <div style="flex:1">
-        <div class="price-grid" style="grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-          <div><div class="field-lbl">暱稱</div><input class="inline-input" type="text" value="${esc(o.nickname)}" oninput="autoSave(${o.id},'nickname',this.value)"></div>
-          <div><div class="field-lbl">商品名稱</div><input class="inline-input" type="text" value="${esc(o.item)}" oninput="autoSave(${o.id},'item',this.value)"></div>
-          <div><div class="field-lbl">尺寸/規格</div><input class="inline-input" type="text" value="${esc(o.size||'')}" oninput="autoSave(${o.id},'size',this.value)"></div>
-          <div><div class="field-lbl">備註</div><input class="inline-input" type="text" value="${esc(o.vendor||'')}" oninput="autoSave(${o.id},'vendor',this.value)"></div>
-          <div><div class="field-lbl">數量</div><input class="inline-input" type="number" min="1" value="${o.quantity||1}" oninput="autoSave(${o.id},'quantity',this.value)"></div>
-        </div>
-        <div class="price-grid">
-          <div><div class="field-lbl">日幣 ¥</div><input class="inline-input" type="number" value="${o.price_jpy||''}" placeholder="1500" oninput="autoSave(${o.id},'price_jpy',this.value); calcInlineTwd(${o.id},this.closest('.price-grid'))"></div>
-          <div><div class="field-lbl">匯率</div><input class="inline-input" type="number" step="0.01" value="${o.rate||''}" placeholder="0.3" oninput="autoSave(${o.id},'rate',this.value); calcInlineTwd(${o.id},this.closest('.price-grid'))"></div>
-          <div><div class="field-lbl">換算台幣</div><input class="inline-calc" id="calc-${o.id}" readonly value="${(o.price_jpy&&o.rate)?'NT$'+Math.round(o.price_jpy*o.rate).toLocaleString():''}"></div>
-          <div><div class="field-lbl">直接台幣</div><input class="inline-input" type="number" value="${o.price_twd||''}" placeholder="直接填" oninput="autoSave(${o.id},'price_twd',this.value)"></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px">
-          <span class="status-badge" style="background:${s.bg};color:${s.color};font-size:11px">${s.label}</span>
-          <select onchange="autoSave(${o.id},'status',this.value)" style="border:1.5px solid #DDD8D0;border-radius:6px;padding:3px 8px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-            ${Object.entries(STATUS).map(([v,st])=>`<option value="${v}" ${(o.status||'pending')===v?'selected':''}>${st.label}</option>`).join('')}
-          </select>
-          <button class="btn-danger" onclick="deleteOrder(${o.id})">🗑 刪除</button>
-        </div>
-      </div>
-    </div>`;
+    const t = o.trip || 'CC選物代購';
+    if (!tripMap[t]) tripMap[t] = [];
+    tripMap[t].push(o);
   });
 
-  html += `<div class="order-footer">
-    <div class="footer-grid">
-      <div><div class="field-lbl">運費 NT$</div><input class="inline-input" type="number" value="${shipping||''}" placeholder="0" oninput="autoSaveGroup('${esc(name)}','shipping',this.value,${items.map(o=>o.id).join(',')})"></div>
-      <div><div class="field-lbl">其他加價 NT$</div><input class="inline-input" type="number" value="${extra||''}" placeholder="0" oninput="autoSaveGroup('${esc(name)}','extra',this.value,${items.map(o=>o.id).join(',')})"></div>
-      <div><div class="field-lbl">優惠折扣 NT$</div><input class="inline-input" type="number" value="${discount||''}" placeholder="0" oninput="autoSaveGroup('${esc(name)}','discount',this.value,${items.map(o=>o.id).join(',')})"></div>
-      <div><div class="field-lbl">備註</div><input class="inline-input" type="text" value="${esc(note)}" oninput="autoSaveGroup('${esc(name)}','note',this.value,${items.map(o=>o.id).join(',')})"></div>
-    </div>
-    <div class="total-row">
-      <span style="font-size:12px;color:#6B6B80">商品合計＋運費＋加價－折扣</span>
-      <span style="font-weight:700;font-size:17px;color:#E8A87C" id="total-${esc(name)}">${total>0?'NT$'+Math.round(total).toLocaleString():'待確認'}</span>
-    </div>
-  </div></div>`;
+  const tripNames = Object.keys(tripMap);
 
-  document.getElementById('picking-content').innerHTML = html;
-}
-
-function calcInlineTwd(id, grid) {
-  if (!grid) return;
-  const inputs = grid.querySelectorAll('input[type=number]');
-  const jpy = parseFloat(inputs[0]?.value)||0;
-  const rate = parseFloat(inputs[1]?.value)||0;
-  const calc = document.getElementById('calc-'+id);
-  if (calc) calc.value = (jpy&&rate) ? 'NT$'+Math.round(jpy*rate).toLocaleString() : '';
-}
-
-function autoSaveGroup(nickname, field, value, ...ids) {
-  const key = `group_${nickname}_${field}`;
-  clearTimeout(saveTimers[key]);
-  saveTimers[key] = setTimeout(async () => {
-    const data = {};
-    if (['shipping','extra','discount'].includes(field)) data[field] = parseFloat(value)||0;
-    else data[field] = value;
-    // Update ALL orders for this nickname in current trip to keep consistent
-    const { error } = await sb.from('orders').update(data)
-      .ilike('nickname', nickname)
-      .eq('trip', currentTrip);
-    await loadOrders(true);
-  }, 800);
-}
-
-// ── Payment ───────────────────────────────────────
-let paymentsCache = {};
-
-async function loadPayments(trip) {
-  const { data } = await sb.from('payments').select('*').eq('trip', trip).order('created_at', { ascending: true });
-  paymentsCache = {};
-  (data || []).forEach(p => {
-    const k = p.nickname.toLowerCase();
-    if (!paymentsCache[k]) paymentsCache[k] = [];
-    paymentsCache[k].push(p);
-  });
-}
-
-async function renderPaymentList(orders) {
-  document.getElementById('loading-payment').style.display = 'none';
-  const container = document.getElementById('payment-content');
-  await loadPayments(currentTrip);
-
-  const groups = groupByNickname(orders);
-  const paymentGroups = Object.entries(groups).filter(([name, items]) => {
-    if (!items.some(o => o.status === 'success')) return false;
-    const total = Math.round(items.reduce((s,o)=>s+itemTotal(o),0) +
-      (()=>{ const gf=getGroupFields(items); return gf.shipping + gf.extra - gf.discount; })());
-    if (total <= 0) return false;
-    const paid = Math.round((paymentsCache[name.toLowerCase()]||[]).reduce((s,p)=>s+Number(p.amount),0));
-    return paid < total;
-  });
-
-  if (!paymentGroups.length) {
-    container.innerHTML = '<div class="card"><div class="empty" style="color:#2E7D32">✓ 目前沒有待付款訂單！</div></div>';
-    return;
-  }
-
-  // Build select
-  const names = paymentGroups.map(([n])=>n).sort((a,b)=>a.localeCompare(b,'zh-TW'));
-  let html = `<div class="card no-print" style="margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <label>選擇客人</label>
-      <span style="font-size:12px;color:#6B6B80">共 ${names.length} 位待付款</span>
-    </div>
-    <select id="payment-select" onchange="showPaymentCustomer()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-      <option value="">-- 選擇客人 --</option>
-      ${names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}
-    </select>
-  </div>
-  <div id="payment-customer-content"></div>`;
-  container.innerHTML = html;
-
-  // Store groups for later use
-  window._paymentGroups = Object.fromEntries(paymentGroups);
-}
-
-function showPaymentCustomer() {
-  const name = document.getElementById('payment-select')?.value;
-  const container = document.getElementById('payment-customer-content');
-  if (!name || !window._paymentGroups) { container.innerHTML = ''; return; }
-  const items = window._paymentGroups[name];
-  if (!items) { container.innerHTML = ''; return; }
-
-  const successQty = items.filter(o=>o.status==='success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-  const total = Math.round(items.reduce((s,o)=>s+itemTotal(o),0) +
-    (()=>{ const gf=getGroupFields(items); return gf.shipping + gf.extra - gf.discount; })());
-  const pmList = paymentsCache[name.toLowerCase()] || [];
-  const paid = Math.round(pmList.reduce((s,p)=>s+Number(p.amount),0));
-  const balance = total - paid;
-  const nameKey = name.replace(/[^a-zA-Z0-9一-鿿]/g, '_');
-
-  // Show customer orders summary
-  // Show success items first
-  const successItems = items.filter(o => o.status === 'success').sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-  const successItemsHtml = successItems.length ? `
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:600;color:#2E7D32;margin-bottom:8px">✓ 採購成功商品</div>
-      ${successItems.map((o,i) => {
-        const twd = itemTotal(o);
-        return `<div style="display:flex;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #F0EDEA;background:${i%2?'#FAFAF8':'#fff'}">
-          ${o.image_url?`<img src="${esc(o.image_url)}" style="width:56px;height:56px;object-fit:cover;border-radius:8px;flex-shrink:0">`:
-            '<div style="width:56px;height:56px;background:#F0EDEA;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;color:#CCC">無圖</div>'}
-          <div style="flex:1">
-            <div style="font-weight:600;color:#1A1A2E;font-size:13px">${esc(o.item)}</div>
-            <div style="font-size:11px;color:#6B6B80">${o.size?esc(o.size)+'　':''}數量：${o.quantity||1}</div>
-          </div>
-          <div style="font-weight:700;color:#1A1A2E;font-size:13px;flex-shrink:0">${twd>0?'NT$'+Math.round(twd).toLocaleString():'-'}</div>
-        </div>`;
-      }).join('')}
-    </div>` : '';
-
-  let html = `<div class="order-card" style="margin-bottom:12px">
-    <div class="order-card-header" style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="color:#fff;font-weight:700;font-size:15px">${esc(name)}</div>
-        <div style="color:#A0A0B8;font-size:11px;margin-top:2px">採購成功 ${successQty} 件</div>
-      </div>
-      <div style="text-align:right">
-        <div style="color:#E8A87C;font-weight:700;font-size:15px">應付 NT$${total.toLocaleString()}</div>
-        <div style="color:${balance>0?'#FFB74D':'#2E7D32'};font-size:12px;font-weight:600">未付 NT$${balance.toLocaleString()}</div>
-      </div>
-    </div>
-    <div style="padding:14px 16px">
-      ${successItemsHtml}
-      ${pmList.length > 0 ? `
-      <div style="margin-bottom:12px;background:#F9F7F5;border-radius:8px;padding:10px 12px">
-        <div style="font-size:11px;font-weight:600;color:#6B6B80;margin-bottom:6px">付款紀錄</div>
-        ${pmList.map(p => `
-          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px">
-            <span style="color:#1A1A2E">${esc(p.method)}${p.note?' ・ '+esc(p.note):''}</span>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-weight:600;color:#2E7D32">NT$${Number(p.amount).toLocaleString()}</span>
-              <button onclick="deletePayment(${p.id},'${esc(name)}')" style="background:transparent;border:none;color:#D64045;cursor:pointer;font-size:13px;padding:0">✕</button>
-            </div>
-          </div>`).join('')}
-        <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B6B80;border-top:1px solid #E8E4DF;padding-top:6px;margin-top:4px">
-          <span>已付合計</span><span style="font-weight:600;color:#1A1A2E">NT$${paid.toLocaleString()}</span>
-        </div>
-      </div>` : ''}
-      <div style="font-size:12px;font-weight:600;color:#6B6B80;margin-bottom:8px">＋ 新增付款紀錄</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-        <div>
-          <div style="font-size:11px;color:#6B6B80;margin-bottom:4px">付款方式</div>
-          <select id="pm-method-${nameKey}" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:8px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-            <option value="">選擇付款方式</option>
-            <option value="轉帳">轉帳</option>
-            <option value="LINE Pay">LINE Pay</option>
-            <option value="賣貨便">賣貨便</option>
-            <option value="現金">現金</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:11px;color:#6B6B80;margin-bottom:4px">金額 NT$</div>
-          <input type="number" id="pm-amount-${nameKey}" placeholder="${balance.toLocaleString()}"
-            style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:8px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-        </div>
-        <div style="grid-column:1/-1">
-          <div style="font-size:11px;color:#6B6B80;margin-bottom:4px">備註（選填）</div>
-          <input type="text" id="pm-note-${nameKey}" placeholder="如：賣貨便單號"
-            style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:8px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-        </div>
-      </div>
-      <button onclick="addPayment('${esc(name)}','${nameKey}')"
-        style="width:100%;background:#1A1A2E;color:#E8A87C;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
-        ＋ 新增付款紀錄
-      </button>
-    </div>
-  </div>`;
-  container.innerHTML = html;
-}
-
-// Dummy to keep old code from breaking - actual paymentGroups loop removed
-function _paymentGroupsLoop() {
-
-  let html = '';
-  paymentGroups.forEach(([name, items]) => {
-    const successQty = items.filter(o=>o.status==='success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-    const total = Math.round(items.reduce((s,o)=>s+itemTotal(o),0) +
-      (()=>{ const gf=getGroupFields(items); return gf.shipping + gf.extra - gf.discount; })());
-    const pmList = paymentsCache[name.toLowerCase()] || [];
-    const paid = Math.round(pmList.reduce((s,p)=>s+Number(p.amount),0));
-    const balance = total - paid;
-    const nameKey = name.replace(/[^a-zA-Z0-9一-鿿]/g, '_');
-
-    html += `<div class="order-card" style="margin-bottom:12px">
-      <div class="order-card-header" style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div style="color:#fff;font-weight:700;font-size:15px">${esc(name)}</div>
-          <div style="color:#A0A0B8;font-size:11px;margin-top:2px">採購成功 ${successQty} 件</div>
-        </div>
-        <div style="text-align:right">
-          <div style="color:#E8A87C;font-weight:700;font-size:15px">應付 NT$${total.toLocaleString()}</div>
-          <div style="color:#A0A0B8;font-size:11px">未付 NT$${balance.toLocaleString()}</div>
-        </div>
-      </div>
-      <div style="padding:14px 16px">
-        ${pmList.length > 0 ? `
-        <div style="margin-bottom:12px;background:#F9F7F5;border-radius:8px;padding:10px 12px">
-          <div style="font-size:11px;font-weight:600;color:#6B6B80;margin-bottom:6px">付款紀錄</div>
-          ${pmList.map(p => `
-            <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:4px">
-              <span style="color:#1A1A2E">${esc(p.method)}${p.note?' ・ '+esc(p.note):''}</span>
-              <div style="display:flex;align-items:center;gap:8px">
-                <span style="font-weight:600;color:#2E7D32">NT$${Number(p.amount).toLocaleString()}</span>
-                <button onclick="deletePayment(${p.id},'${esc(name)}')" style="background:transparent;border:none;color:#D64045;cursor:pointer;font-size:13px;padding:0">✕</button>
-              </div>
-            </div>`).join('')}
-          <div style="display:flex;justify-content:space-between;font-size:12px;color:#6B6B80;border-top:1px solid #E8E4DF;padding-top:6px;margin-top:4px">
-            <span>已付合計</span><span style="font-weight:600;color:#1A1A2E">NT$${paid.toLocaleString()}</span>
-          </div>
-        </div>` : ''}
-        <div style="font-size:12px;font-weight:600;color:#6B6B80;margin-bottom:8px">＋ 新增付款紀錄</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <div>
-            <div style="font-size:11px;color:#6B6B80;margin-bottom:4px">付款方式</div>
-            <select id="pm-method-${nameKey}" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:8px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-              <option value="">選擇付款方式</option>
-              <option value="轉帳">轉帳</option>
-              <option value="LINE Pay">LINE Pay</option>
-              <option value="賣貨便">賣貨便</option>
-              <option value="現金">現金</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:11px;color:#6B6B80;margin-bottom:4px">金額 NT$</div>
-            <input type="number" id="pm-amount-${nameKey}" placeholder="${balance.toLocaleString()}"
-              style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:8px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          </div>
-          <div style="grid-column:1/-1">
-            <div style="font-size:11px;color:#6B6B80;margin-bottom:4px">備註（選填）</div>
-            <input type="text" id="pm-note-${nameKey}" placeholder="如：賣貨便單號"
-              style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:8px;font-size:13px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-          </div>
-        </div>
-        <button onclick="addPayment('${esc(name)}','${nameKey}')"
-          style="width:100%;background:#1A1A2E;color:#E8A87C;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
-          ＋ 新增付款紀錄
-        </button>
-      </div>
-    </div>`;
-  });
-  container.innerHTML = html;
-}
-
-async function addPayment(name, nameKey) {
-  const method = document.getElementById(`pm-method-${nameKey}`)?.value;
-  const amount = parseFloat(document.getElementById(`pm-amount-${nameKey}`)?.value) || 0;
-  const note = document.getElementById(`pm-note-${nameKey}`)?.value || '';
-  if (!method) { alert('請選擇付款方式！'); return; }
-  if (!amount) { alert('請輸入付款金額！'); return; }
-
-  // Generate order number for first payment only
-  const existing = paymentsCache[name.toLowerCase()] || [];
-  let order_no = existing.length > 0 ? (existing[0].order_no || '') : '';
-  if (!order_no) {
-    const d = new Date().toISOString().slice(0,10).replace(/-/g,'');
-    const r = String(Math.floor(Math.random()*900+100));
-    order_no = `CC${d}-${r}`;
-  }
-
-  await sb.from('payments').insert([{ nickname: name, trip: currentTrip, method, amount, note, order_no }]);
-  const freshOrders = showArchived ? allOrders : allOrders.filter(o=>(o.trip||currentTrip)===currentTrip);
-  await renderPaymentList(freshOrders);
-}
-
-async function deletePayment(id, name) {
-  if (!confirm('確定刪除這筆付款紀錄？')) return;
-  await sb.from('payments').delete().eq('id', id);
-  const freshOrders2 = showArchived ? allOrders : allOrders.filter(o=>(o.trip||currentTrip)===currentTrip);
-  await renderPaymentList(freshOrders2);
-}
-
-function showMethodDetail(method) {
-  const detail = document.getElementById('method-detail');
-  const items = window._methodDetails?.[method] || [];
-  const methodColors = { '轉帳':'#1565C0','LINE Pay':'#2E7D32','賣貨便':'#E65100','現金':'#6B6B80' };
-  const total = Math.round(items.reduce((s,p)=>s+p.amount,0));
-  const isLinePay = method === 'LINE Pay';
-  const fee = isLinePay ? Math.round(total * 0.0231) : 0;
-  const netAmount = total - fee;
-
-  detail.style.display = 'block';
-  detail.innerHTML = `<div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-weight:700;color:${methodColors[method]||'#6B6B80'};font-size:14px">${esc(method)} 明細</div>
-      <button onclick="document.getElementById('method-detail').style.display='none'"
-        style="background:transparent;border:none;color:#6B6B80;font-size:18px;cursor:pointer">×</button>
-    </div>
-    ${items.map((p,i) => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #F0EDEA">
-        <div>
-          <div style="font-weight:600;color:#1A1A2E;font-size:13px">${esc(p.name)}</div>
-          ${p.note?`<div style="font-size:11px;color:#A0A0B8">${esc(p.note)}</div>`:''}
-        </div>
-        <div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${p.amount.toLocaleString()}</div>
-      </div>`).join('')}
-    <div style="border-top:2px solid #E8E4DF;padding-top:10px;margin-top:6px">
-      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:#1A1A2E;margin-bottom:${isLinePay?'8px':'0'}">
-        <span>收款合計</span>
-        <span style="color:${methodColors[method]||'#6B6B80'}">NT$${total.toLocaleString()}</span>
-      </div>
-      ${isLinePay ? `
-      <div style="background:#FFF3E0;border-radius:8px;padding:10px 12px;border:1px solid #FFB74D">
-        <div style="display:flex;justify-content:space-between;font-size:13px;color:#E65100;margin-bottom:4px">
-          <span>手續費 2.31%</span>
-          <span>-NT$${fee.toLocaleString()}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:#E65100;border-top:1px solid #FFB74D;padding-top:6px;margin-top:4px">
-          <span>實際撥款金額</span>
-          <span>NT$${netAmount.toLocaleString()}</span>
-        </div>
-      </div>` : ''}
-    </div>
-  </div>`;
-}
-
-async function renderDoneList(orders) {
-  document.getElementById('loading-done').style.display = 'none';
-  const container = document.getElementById('done-content');
-  await loadPayments(currentTrip);
-
-  const groups = groupByNickname(orders);
-  const doneGroups = Object.entries(groups).filter(([name, items]) => {
-    if (!items.some(o => o.status === 'success')) return false;
-    const total = Math.round(items.reduce((s,o)=>s+itemTotal(o),0) +
-      (()=>{ const gf=getGroupFields(items); return gf.shipping + gf.extra - gf.discount; })());
-    const paid = Math.round((paymentsCache[name.toLowerCase()]||[]).reduce((s,p)=>s+Number(p.amount),0));
-    return paid >= total && total > 0;
-  });
-
-  if (!doneGroups.length) {
-    container.innerHTML = '<div class="card"><div class="empty">尚無已完成訂單</div></div>';
-    return;
-  }
-
-  const names = doneGroups.map(([n])=>n).sort((a,b)=>a.localeCompare(b,'zh-TW'));
-  window._doneGroups = Object.fromEntries(doneGroups);
-
-  // Calculate payment method totals
-  const methodTotals = {};
-  let grandTotal = 0;
-  names.forEach(name => {
-    const pmList = paymentsCache[name.toLowerCase()] || [];
-    pmList.forEach(p => {
-      if (!methodTotals[p.method]) methodTotals[p.method] = 0;
-      methodTotals[p.method] += Number(p.amount);
-      grandTotal += Number(p.amount);
-    });
-  });
-
-  const methodColors = {
-    '轉帳': '#1565C0', 'LINE Pay': '#2E7D32', '賣貨便': '#E65100', '現金': '#6B6B80'
-  };
-
-  // Build method -> customers detail map
-  const methodDetails = {};
-  names.forEach(name => {
-    const pmList = paymentsCache[name.toLowerCase()] || [];
-    pmList.forEach(p => {
-      if (!methodDetails[p.method]) methodDetails[p.method] = [];
-      methodDetails[p.method].push({ name, amount: Number(p.amount), note: p.note });
-    });
-  });
-  window._methodDetails = methodDetails;
-
-  let html = `<div class="card" style="margin-bottom:14px">
-    <div style="font-weight:700;color:#1A1A2E;font-size:14px;margin-bottom:12px">💳 付款方式統計（點選查看明細）</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px">
-      ${Object.entries(methodTotals).map(([method, amt]) => `
-        <div onclick="showMethodDetail('${esc(method)}')" style="background:#F5F3EF;border-radius:8px;padding:10px 12px;border:2px solid #E8E4DF;cursor:pointer;transition:all 0.2s"
-          onmouseover="this.style.borderColor='#E8A87C'" onmouseout="this.style.borderColor='#E8E4DF'">
-          <div style="font-size:11px;color:${methodColors[method]||'#6B6B80'};font-weight:600;margin-bottom:4px">${esc(method)}</div>
-          <div style="font-size:16px;font-weight:700;color:#1A1A2E">NT$${Math.round(amt).toLocaleString()}</div>
-          <div style="font-size:10px;color:#A0A0B8;margin-top:2px">${(methodDetails[method]||[]).length} 筆</div>
-        </div>`).join('')}
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;border-top:2px solid #E8A87C;padding-top:10px">
-      <span style="font-weight:700;color:#1A1A2E;font-size:14px">總收款金額</span>
-      <span style="font-weight:700;color:#E8A87C;font-size:20px">NT$${Math.round(grandTotal).toLocaleString()}</span>
-    </div>
-    <div style="font-size:11px;color:#A0A0B8;margin-top:4px">共 ${names.length} 位客人已付清</div>
-  </div>
-
-  <!-- 付款方式明細 -->
-  <div id="method-detail" style="display:none;margin-bottom:14px"></div>
-
-  <div class="card no-print" style="margin-bottom:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-      <label>選擇客人查看明細</label>
-      <span style="font-size:12px;color:#6B6B80">共 ${names.length} 位已完成</span>
-    </div>
-    <select id="done-select" onchange="showDoneCustomer()" style="width:100%;border:1.5px solid #DDD8D0;border-radius:8px;padding:9px;font-size:14px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-      <option value="">-- 選擇客人 --</option>
-      ${names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('')}
-    </select>
-  </div>
-  <div id="done-customer-content"></div>`;
-  container.innerHTML = html;
-}
-
-function showDoneCustomer() {
-  const name = document.getElementById('done-select')?.value;
-  const container = document.getElementById('done-customer-content');
-  if (!name || !window._doneGroups) { container.innerHTML = ''; return; }
-  const items = window._doneGroups[name];
-  if (!items) { container.innerHTML = ''; return; }
-
-  const successQty = items.filter(o=>o.status==='success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-  const pmList = paymentsCache[name.toLowerCase()] || [];
-  const paid = Math.round(pmList.reduce((s,p)=>s+Number(p.amount),0));
-  const orderNo = pmList[0]?.order_no || '';
-
-  let html = `<div class="order-card">
-    <div class="order-card-header" style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="color:#fff;font-weight:700;font-size:15px">${esc(name)}</div>
-        <div style="color:#A0A0B8;font-size:11px;margin-top:2px">採購成功 ${successQty} 件</div>
-        ${orderNo?`<div style="background:#2A2A4E;color:#E8A87C;border-radius:4px;padding:2px 8px;font-size:11px;font-weight:600;display:inline-block;margin-top:4px">${esc(orderNo)}</div>`:''}
-      </div>
-      <span style="background:#2E7D32;color:#fff;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600">✓ 付款完成</span>
-    </div>
-    <div style="padding:12px 16px">
-      ${pmList.map(p => `
-        <div style="padding:8px 0;border-bottom:1px solid #F0EDEA">
-          <div id="view-${p.id}" style="display:flex;justify-content:space-between;align-items:center">
-            <span style="color:#6B6B80;font-size:13px">${esc(p.method)}${p.note?' ・ '+esc(p.note):''}</span>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-weight:600;color:#2E7D32">NT$${Number(p.amount).toLocaleString()}</span>
-              <button onclick="editPaymentRecord(${p.id},'${esc(p.method)}',${p.amount},'${esc(p.note||'')}','${esc(name)}')"
-                style="background:transparent;border:1px solid #DDD8D0;border-radius:5px;color:#6B6B80;cursor:pointer;font-size:11px;padding:2px 8px;font-family:inherit">✏️</button>
-              <button onclick="deletePayment(${p.id},'${esc(name)}')"
-                style="background:transparent;border:none;color:#D64045;cursor:pointer;font-size:13px;padding:0">✕</button>
-            </div>
-          </div>
-          <div id="edit-${p.id}" style="display:none;margin-top:8px;display:none">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
-              <div>
-                <div style="font-size:10px;color:#6B6B80;margin-bottom:3px">付款方式</div>
-                <select id="edit-method-${p.id}" style="width:100%;border:1.5px solid #E8A87C;border-radius:6px;padding:6px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-                  <option value="轉帳" ${p.method==='轉帳'?'selected':''}>轉帳</option>
-                  <option value="LINE Pay" ${p.method==='LINE Pay'?'selected':''}>LINE Pay</option>
-                  <option value="賣貨便" ${p.method==='賣貨便'?'selected':''}>賣貨便</option>
-                  <option value="現金" ${p.method==='現金'?'selected':''}>現金</option>
-                </select>
-              </div>
-              <div>
-                <div style="font-size:10px;color:#6B6B80;margin-bottom:3px">金額 NT$</div>
-                <input type="number" id="edit-amount-${p.id}" value="${p.amount}"
-                  style="width:100%;border:1.5px solid #E8A87C;border-radius:6px;padding:6px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-              </div>
-              <div style="grid-column:1/-1">
-                <div style="font-size:10px;color:#6B6B80;margin-bottom:3px">備註</div>
-                <input type="text" id="edit-note-${p.id}" value="${esc(p.note||'')}"
-                  style="width:100%;border:1.5px solid #E8A87C;border-radius:6px;padding:6px;font-size:12px;color:#1A1A2E;background:#FAFAF8;outline:none;font-family:inherit">
-              </div>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button onclick="savePaymentEdit(${p.id},'${esc(name)}')"
-                style="flex:1;background:#1A1A2E;color:#E8A87C;border:none;border-radius:6px;padding:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">💾 儲存</button>
-              <button onclick="cancelPaymentEdit(${p.id})"
-                style="background:transparent;border:1.5px solid #DDD8D0;border-radius:6px;padding:7px 12px;font-size:12px;color:#6B6B80;cursor:pointer;font-family:inherit">取消</button>
-            </div>
-          </div>
-        </div>`).join('')}
-      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:#1A1A2E;border-top:1px solid #E8E4DF;padding-top:8px;margin-top:6px">
-        <span>付款總計</span>
-        <span style="color:#2E7D32">NT$${paid.toLocaleString()}</span>
-      </div>
-    </div>
-  </div>`;
-  container.innerHTML = html;
-}
-
-function editPaymentRecord(id, method, amount, note, name) {
-  document.getElementById(`view-${id}`).style.display = 'none';
-  document.getElementById(`edit-${id}`).style.display = 'block';
-}
-
-function cancelPaymentEdit(id) {
-  document.getElementById(`view-${id}`).style.display = 'flex';
-  document.getElementById(`edit-${id}`).style.display = 'none';
-}
-
-async function savePaymentEdit(id, name) {
-  const method = document.getElementById(`edit-method-${id}`).value;
-  const amount = parseFloat(document.getElementById(`edit-amount-${id}`).value) || 0;
-  const note = document.getElementById(`edit-note-${id}`).value || '';
-  if (!amount) { alert('請輸入金額！'); return; }
-  await sb.from('payments').update({ method, amount, note }).eq('id', id);
-  const orders = showArchived ? allOrders : allOrders.filter(o=>(o.trip||currentTrip)===currentTrip);
-  await renderDoneList(orders);
-  document.getElementById('done-select').value = name;
-  showDoneCustomer();
-}
-
-// ── Shipping ───────────────────────────────────────
-function onShippingSelect(silent = false) {
-  const val = document.getElementById('shipping-select').value;
-  const orders = showArchived ? allOrders : allOrders.filter(o => (o.trip||currentTrip)===currentTrip);
-  if (!val) { document.getElementById('shipping-content').innerHTML = ''; return; }
-  renderShippingCustomer(val, orders);
-}
-
-function renderShippingCustomer(name, orders) {
-  const items = orders.filter(o => o.nickname.toLowerCase() === name.toLowerCase())
-    .sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
-  if (!items.length) { document.getElementById('shipping-content').innerHTML = '<div class="empty">找不到此客人訂單</div>'; return; }
-
-  const itemsTwd = items.reduce((s,o) => s + itemTotal(o), 0);
-  const { shipping, extra, discount, note } = getGroupFields(items);
-  const total = itemsTwd + shipping + extra - discount;
-
-  let html = `<div class="order-card">
-    <div class="order-card-header" style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="color:#fff;font-weight:700;font-size:16px">${esc(name)}</div>
-        <div style="color:#A0A0B8;font-size:11px;margin-top:2px">${fmt(items[0]?.created_at)}　共 ${items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0)} 件</div>
-      </div>
-      <div style="color:#E8A87C;font-weight:700;font-size:16px">${total>0?'NT$'+Math.round(total).toLocaleString():'待確認'}</div>
-    </div>`;
-
-  items.forEach((o,i) => {
-    const s = STATUS[o.status]||STATUS.pending;
-    const twd = calcTwdVal(o);
-    const twdTotal = itemTotal(o);
-    html += `<div style="display:flex;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid #F0EDEA;background:${i%2?'#FAFAF8':'#fff'}">
-      ${o.image_url?`<img src="${esc(o.image_url)}" class="thumb">`:
-        '<div class="no-img">無圖</div>'}
-      <div style="flex:1">
-        <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:4px">${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}</div>
-        <div style="font-size:12px;color:#6B6B80">
-          ${o.size?esc(o.size)+'　':''}數量：${o.quantity||1}${o.vendor?`　${esc(o.vendor)}`:''}
-        </div>
-        <div style="font-size:12px;color:#6B6B80;margin-top:2px">
-          ${o.price_jpy>0?`日幣：¥${Number(o.price_jpy).toLocaleString()}　`:''}
-          ${twd>0&&o.status!=='outofstock'?`台幣：<b style="color:#1A1A2E">NT$${Math.round(twd).toLocaleString()}</b>`:''}
-        </div>
-        <div style="margin-top:4px">
-          <span class="status-badge" style="background:${s.bg};color:${s.color};font-size:11px">${s.label}</span>
-        </div>
-      </div>
-      <div style="text-align:right;flex-shrink:0">
-        ${o.status==='outofstock'?'<div style="color:#D64045;font-size:12px;font-weight:600">不計費</div>':
-          twdTotal>0?`<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>`:''}
-      </div>
-    </div>`;
-  });
-
-  html += `<div class="order-footer">
-    ${(() => {
-      const successQty = items.filter(o => o.status === 'success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-      const totalQty = items.reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-      return successQty > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;padding:8px 10px;background:#E8F5E9;border-radius:8px;color:#2E7D32"><span>✓ 採購成功數量</span><span style="font-weight:700">${successQty} / ${totalQty} 件</span></div>` : '';
-    })()}
-    ${itemsTwd>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
-    ${shipping>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
-    ${extra>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
-    ${discount>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#2E7D32;margin-bottom:4px"><span>優惠折扣</span><span>-NT$${discount.toLocaleString()}</span></div>`:''}
-    ${note?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>備註</span><span>${esc(note)}</span></div>`:''}
-    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:17px;color:#1A1A2E;border-top:1px solid #E8E4DF;padding-top:10px;margin-top:6px">
-      <span>應付總金額</span>
-      <span style="color:#E8A87C">${total>0?'NT$'+Math.round(total).toLocaleString():'待確認'}</span>
-    </div>
-  </div></div>`;
-
-  document.getElementById('shipping-content').innerHTML = html;
-}
-
-function showRevenue() {
-  const trip = document.getElementById('revenue-select').value;
-  if (!trip) { alert('請選擇團次'); return; }
-  const pwd = prompt('請輸入密碼：');
-  if (pwd !== '888') { alert('密碼錯誤！'); return; }
-  const tripOrders = allOrders.filter(o => (o.trip||currentTrip) === trip);
-  const total = tripOrders.reduce((s,o) => s + itemTotal(o), 0);
-  const groups = groupByNickname(tripOrders);
-  const adj = Object.values(groups).reduce((s, items) => {
-    return s + (()=>{ const gf=getGroupFields(items); return gf.shipping + gf.extra - gf.discount; })();
+  // Grand total
+  const grandTotal = tripNames.reduce((s, tn) => {
+    const ti = tripMap[tn];
+    const twd = ti.reduce((ts,o) => ts + itemTotal(o), 0);
+    const { shipping, extra, discount } = getGroupFields(ti);
+    return s + twd + shipping + extra - discount;
   }, 0);
-  const grand = total + adj;
-  const totalQty = tripOrders.reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-  const successQty = tripOrders.filter(o=>COUNT_STATUSES.includes(o.status||'pending')).reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-  const pendingQty = tripOrders.filter(o=>(o.status||'pending')==='pending').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-  document.getElementById('revenue-result').style.display = 'block';
-  document.getElementById('revenue-label').textContent = `${trip}（採購成功/出貨準備中/已完成）`;
-  document.getElementById('revenue-amount').textContent = `NT$${Math.round(grand).toLocaleString()}`;
-  document.getElementById('stat-total').textContent = totalQty+' 件';
-  document.getElementById('stat-success').textContent = successQty+' 件';
-  document.getElementById('stat-pending').textContent = pendingQty+' 件';
-}
 
-function printPage() { window.print(); }
-
-// ── Customer ───────────────────────────────────────
-function onCustomerTripSelect() {
-  const trip = document.getElementById('customer-trip-select').value;
-  const wrap = document.getElementById('customer-name-wrap');
-  const ct = document.getElementById('customer-content');
-  if (!trip) { wrap.style.display = 'none'; ct.innerHTML = ''; return; }
-  const tripOrders = allOrders.filter(o => (o.trip||currentTrip) === trip);
-  const groups = groupByNickname(tripOrders);
-  const names = Object.keys(groups).sort((a,b)=>a.localeCompare(b,'zh-TW'));
-  const sel = document.getElementById('customer-select');
-  sel.innerHTML = '<option value="">-- 選擇客人 --</option>' +
-    names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
-  sel.value = '';
-  wrap.style.display = 'block';
-  ct.innerHTML = '';
-}
-
-function onCustomerSelect(silent = false) {
-  const val = document.getElementById('customer-select').value;
-  if (!val) { document.getElementById('customer-content').innerHTML = ''; return; }
-  renderCustomer(val);
-}
-
-function renderCustomer(name) {
-  const trip = document.getElementById('customer-trip-select')?.value || '';
-  const items = allOrders.filter(o =>
-    o.nickname.toLowerCase() === name.toLowerCase() &&
-    (!trip || (o.trip||currentTrip) === trip)
-  );
-  if (!items.length) { document.getElementById('customer-content').innerHTML = '<div class="empty">找不到此客人訂單</div>'; return; }
-
-  const pmList = paymentsCache[name.toLowerCase()] || [];
-  const paidTotal = Math.round(pmList.reduce((s,p)=>s+Number(p.amount),0));
-  const orderNo = pmList[0]?.order_no || '';
-  const sorted = [...items].sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
-  const itemsTwd = sorted.reduce((s,o)=>s+itemTotal(o),0);
-  const { shipping, extra, discount, note } = getGroupFields(sorted);
-  const total = Math.round(itemsTwd + shipping + extra - discount);
-  const isPaid = paidTotal >= total && total > 0;
-  const successQty = sorted.filter(o=>o.status==='success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-  const totalQty = sorted.reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
-
-  let html = `<div style="background:#1A1A2E;border-radius:12px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <div>
-      <div style="color:#fff;font-weight:700;font-size:16px">${esc(name)}</div>
-      ${orderNo?`<div style="margin-top:4px"><span style="background:#2A2A4E;color:#E8A87C;border-radius:4px;padding:2px 8px;font-size:11px">${esc(orderNo)}</span></div>`:''}
-      <div style="color:#A0A0B8;font-size:12px;margin-top:3px">共 ${totalQty} 件</div>
-    </div>
-    <div style="text-align:right">
-      ${isPaid
-        ? '<div style="background:#2E7D32;color:#fff;border-radius:6px;padding:4px 12px;font-size:12px;font-weight:600">✓ 訂單已完成</div>'
-        : `<div style="color:#E8A87C;font-weight:700;font-size:16px">${total>0?'NT$'+total.toLocaleString():'待確認'}</div>`}
-    </div>
+  let html = `<div style="background:#1A1A2E;border-radius:12px;padding:14px 18px;margin-bottom:8px">
+    <div style="color:#fff;font-weight:700;font-size:17px">${esc(name)}</div>
   </div>`;
 
-  if (successQty > 0) {
-    html += `<div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px;padding:8px 12px;background:#E8F5E9;border-radius:8px;color:#2E7D32">
-      <span>✓ 採購成功數量</span><span style="font-weight:700">${successQty} / ${totalQty} 件</span>
-    </div>`;
-  }
+  tripNames.forEach((tn, idx) => {
+    const ti = tripMap[tn];
+    const sorted = [...ti].sort((a,b) => new Date(a.created_at)-new Date(b.created_at));
+    const { shipping, extra, discount, note } = getGroupFields(sorted);
+    const itemsTwd = sorted.reduce((s,o) => s + itemTotal(o), 0);
+    const total = itemsTwd + shipping + extra - discount;
 
-  html += '<div class="order-card" style="margin-bottom:8px">';
-  sorted.forEach((o,i) => {
-    const s = STATUS[o.status]||STATUS.pending;
-    const twdTotal = itemTotal(o);
-    html += `<div style="display:flex;gap:12px;align-items:center;padding:12px 16px;border-bottom:1px solid #F0EDEA;background:${i%2?'#FAFAF8':'#fff'}">
-      ${o.image_url?`<img src="${esc(o.image_url)}" class="thumb">`:'<div class="no-img">無圖</div>'}
-      <div style="flex:1">
-        <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:3px">${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}</div>
-        <div style="font-size:12px;color:#6B6B80">尺寸/規格：${esc(o.size)||'-'}　數量：${o.quantity||1}</div>
-        ${o.vendor?`<div style="font-size:12px;color:#6B6B80;margin-top:2px">備註：${esc(o.vendor)}</div>`:''}
-        ${o.price_jpy>0?`<div style="font-size:12px;color:#6B6B80;margin-top:2px">日幣原價：¥${Number(o.price_jpy).toLocaleString()}</div>`:''}
-        <div style="margin-top:4px"><span class="status-badge" style="background:${s.bg};color:${s.color};font-size:11px">${s.label}</span></div>
+    // Payment
+    const pmList = allPayments.filter(p => p.nickname.toLowerCase()===name.toLowerCase() && p.trip===tn);
+    const orderNo = pmList[0]?.order_no || '';
+    const paidTotal = Math.round(pmList.reduce((s,p)=>s+Number(p.amount),0));
+    const isPaid = paidTotal >= Math.round(total) && total > 0;
+
+    const successQty = sorted.filter(o=>o.status==='success').reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
+    const totalQty = sorted.reduce((s,o)=>s+(parseInt(o.quantity)||1),0);
+    const tripId = 'trip-' + idx;
+
+    html += `<div style="margin-top:8px">
+      <div onclick="toggleTrip('${tripId}')" style="background:#1A1A2E;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer">
+        <div>
+          <span style="color:#E8A87C;font-weight:700;font-size:14px">🏷 ${esc(tn)}</span>
+          ${orderNo?`<span style="background:#2A2A4E;color:#A0A0C8;border-radius:4px;padding:1px 8px;font-size:10px;margin-left:8px">${esc(orderNo)}</span>`:''}
+          ${isPaid?`<span style="background:#2E7D32;color:#fff;border-radius:4px;padding:1px 8px;font-size:10px;margin-left:4px">✓ 已付款</span>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="color:#A0A0B8;font-size:12px">${totalQty} 件</span>
+          <span id="arrow-${tripId}" style="color:#E8A87C">▼</span>
+        </div>
       </div>
-      <div style="text-align:right;flex-shrink:0">
-        ${o.status==='outofstock'?'<div style="color:#D64045;font-size:12px">不計費</div>':
-          twdTotal>0?`<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>`:''}
+      <div id="${tripId}" style="display:none">
+        <div class="card" style="border-radius:0 0 12px 12px;border-top:none;padding:12px 16px">
+          ${successQty > 0 ? `<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:10px;padding:7px 10px;background:#E8F5E9;border-radius:8px;color:#2E7D32"><span>✓ 採購成功數量</span><span style="font-weight:700">${successQty} / ${totalQty} 件</span></div>` : ''}
+          ${sorted.map((o,i) => {
+            const s = STATUS[o.status||'pending'] || STATUS.pending;
+            const twdTotal = itemTotal(o);
+            return `<div style="display:flex;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid #F0EDEA;background:${i%2?'#FAFAF8':'#fff'}">
+              ${o.image_url?`<img src="${esc(o.image_url)}" class="thumb">`:'<div class="no-thumb">無圖</div>'}
+              <div style="flex:1">
+                <div style="font-weight:700;color:${o.status==='outofstock'?'#D64045':'#1A1A2E'};font-size:14px;margin-bottom:3px">${esc(o.item)}${o.status==='outofstock'?' （斷貨）':''}</div>
+                <div style="font-size:12px;color:#6B6B80">尺寸/規格：${esc(o.size)||'-'}　數量：${o.quantity||1}</div>
+                ${o.vendor?`<div style="font-size:12px;color:#6B6B80;margin-top:2px">備註：${esc(o.vendor)}</div>`:''}
+                ${o.price_jpy>0?`<div style="font-size:12px;color:#6B6B80;margin-top:2px">日幣原價：¥${Number(o.price_jpy).toLocaleString()}</div>`:''}
+                <div style="margin-top:4px"><span class="status-badge" style="background:${s.bg};color:${s.color}">${s.label}</span></div>
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                ${o.status==='outofstock'?'<div style="color:#D64045;font-size:12px">不計費</div>':
+                  twdTotal>0?`<div style="font-weight:700;color:#1A1A2E;font-size:14px">NT$${Math.round(twdTotal).toLocaleString()}</div>`:''}
+              </div>
+            </div>`;
+          }).join('')}
+          <div style="background:#FEF9F4;border-radius:8px;padding:12px;margin-top:10px;border:1px solid #E8A87C">
+            ${itemsTwd>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
+            ${shipping>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
+            ${extra>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
+            ${discount>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#2E7D32;margin-bottom:4px"><span>優惠折扣</span><span>-NT$${discount.toLocaleString()}</span></div>`:''}
+            ${note?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>備註</span><span>${esc(note)}</span></div>`:''}
+            <div style="display:flex;justify-content:space-between;font-weight:700;font-size:16px;color:#1A1A2E;border-top:1px solid #E8A87C;padding-top:8px;margin-top:6px">
+              <span>本團應付</span>
+              <span style="color:#E8A87C">${total>0?'NT$'+Math.round(total).toLocaleString():'待確認'}</span>
+            </div>
+            ${isPaid?`<div style="border-top:1px solid #E8A87C;margin-top:8px;padding-top:8px">
+              ${pmList.map(p=>`<div style="display:flex;justify-content:space-between;font-size:13px;color:#2E7D32;margin-bottom:3px"><span>${esc(p.method)}${p.note?' ・ '+esc(p.note):''}</span><span style="font-weight:600">NT$${Number(p.amount).toLocaleString()}</span></div>`).join('')}
+              <div style="display:flex;justify-content:space-between;font-weight:700;font-size:14px;color:#2E7D32;margin-top:4px"><span>✓ 已付款</span><span>NT$${paidTotal.toLocaleString()}</span></div>
+            </div>`:''}
+          </div>
+        </div>
       </div>
     </div>`;
   });
-  html += '</div>';
 
-  html += `<div style="background:#FEF9F4;border-radius:12px;padding:14px 16px;border:1px solid #E8A87C">
-    ${itemsTwd>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>商品合計</span><span>NT$${Math.round(itemsTwd).toLocaleString()}</span></div>`:''}
-    ${shipping>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>運費</span><span>NT$${shipping.toLocaleString()}</span></div>`:''}
-    ${extra>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>其他加價</span><span>NT$${extra.toLocaleString()}</span></div>`:''}
-    ${discount>0?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#2E7D32;margin-bottom:4px"><span>優惠折扣</span><span>-NT$${discount.toLocaleString()}</span></div>`:''}
-    ${note?`<div style="display:flex;justify-content:space-between;font-size:13px;color:#6B6B80;margin-bottom:4px"><span>備註</span><span>${esc(note)}</span></div>`:''}
-    <div style="display:flex;justify-content:space-between;font-weight:700;font-size:17px;color:#1A1A2E;border-top:1px solid #E8A87C;padding-top:10px;margin-top:6px">
-      <span>應付總金額</span>
-      <span style="color:#E8A87C">${total>0?'NT$'+total.toLocaleString():'待確認'}</span>
-    </div>
-    ${isPaid?`<div style="border-top:1px solid #E8A87C;margin-top:10px;padding-top:10px">
-      ${pmList.map(p=>`<div style="display:flex;justify-content:space-between;font-size:13px;color:#2E7D32;margin-bottom:3px"><span>${esc(p.method)}${p.note?' ・ '+esc(p.note):''}</span><span style="font-weight:600">NT$${Number(p.amount).toLocaleString()}</span></div>`).join('')}
-      <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:#2E7D32;margin-top:6px"><span>✓ 已付款</span><span>NT$${paidTotal.toLocaleString()}</span></div>
-    </div>`:''}
-  </div>`;
-
-  document.getElementById('customer-content').innerHTML = html;
+  result.innerHTML = html;
 }
 
-
-// ── Tab ─────────────────────────────────────────────
-function switchTab(tab) {
-  ['orders','picking','shipping','customer'].forEach(t => {
-    document.getElementById(t+'-tab').style.display = t===tab?'block':'none';
-  });
-  document.querySelectorAll('.tab-btn').forEach((btn,i) => {
-    btn.classList.toggle('active', ['orders','picking','shipping','customer'][i]===tab);
-  });
-  const orders = showArchived ? allOrders : allOrders.filter(o=>(o.trip||currentTrip)===currentTrip);
-  if (tab==='picking') { populateSelects(orders); onPickingSelect(); }
-  if (tab==='shipping') { populateSelects(orders); onShippingSelect(); }
-  if (tab==='customer') { populateSelects(orders); onCustomerSelect(); }
+function toggleTrip(id) {
+  const el = document.getElementById(id);
+  const arrow = document.getElementById('arrow-'+id);
+  if (!el) return;
+  const isOpen = el.style.display !== 'none';
+  el.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
 }
 
-// ── Init ────────────────────────────────────────────
-loadOrders();
-// Realtime
-sb.channel('orders-rt').on('postgres_changes',{event:'*',schema:'public',table:'orders'},()=>loadOrders(true)).subscribe();
+loadAll();
 </script>
 </body>
 </html>
